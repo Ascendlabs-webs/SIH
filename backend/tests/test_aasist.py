@@ -13,9 +13,12 @@ torch = pytest.importorskip("torch")
 
 ROOT = Path(__file__).resolve().parents[2]
 CKPT = ROOT / "models" / "AASIST.pth"
-needs_ckpt = pytest.mark.skipif(not CKPT.is_file(), reason="models/AASIST.pth absent")
+needs_ckpt = pytest.mark.skipif(not CKPT.is_file(), reason="AASIST checkpoint unavailable; run scripts/download_aasist.py")
+requires_model = pytest.mark.requires_model
 
 
+@requires_model
+@needs_ckpt
 def test_checkpoint_present_and_shaped():
     from app.models.aasist_net import Model as AASISTNet
     from app.models.ml_detector import AASIST_D_ARGS
@@ -30,6 +33,7 @@ def test_checkpoint_present_and_shaped():
     assert n == 297866, f"param count changed: {n}"
 
 
+@requires_model
 @needs_ckpt
 def test_model_loading_strict():
     from app.models.ml_detector import MLVoiceDetector
@@ -42,6 +46,7 @@ def test_model_loading_strict():
     assert det.uses_waveform is True
 
 
+@requires_model
 @needs_ckpt
 def test_valid_waveform_inference_range():
     from app.models.ml_detector import MLVoiceDetector
@@ -58,6 +63,7 @@ def test_valid_waveform_inference_range():
     assert np.isfinite(out["spoof_logit"]) and np.isfinite(out["bonafide_logit"])
 
 
+@requires_model
 @needs_ckpt
 def test_25s_window_padding_compat():
     from app.models.ml_detector import MLVoiceDetector, pad_upstream, AASIST_SAMPLES
@@ -72,6 +78,7 @@ def test_25s_window_padding_compat():
     assert 0.0 <= out8["synthetic_probability"] <= 1.0
 
 
+@requires_model
 @needs_ckpt
 def test_invalid_waveforms_rejected():
     from app.models.ml_detector import MLVoiceDetector
@@ -87,6 +94,7 @@ def test_invalid_waveforms_rejected():
         det.score_waveform(bad, 16000)
 
 
+@requires_model
 @needs_ckpt
 def test_predict_vector_api_refuses():
     from app.models.ml_detector import MLVoiceDetector, ModelNotAvailableError
@@ -96,6 +104,7 @@ def test_predict_vector_api_refuses():
         det.predict({"mfcc": [0.0] * 13})
 
 
+@requires_model
 @needs_ckpt
 def test_pipeline_ml_integration():
     from app.services.pipeline import AnalysisPipeline

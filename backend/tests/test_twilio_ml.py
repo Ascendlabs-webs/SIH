@@ -9,6 +9,9 @@ from __future__ import annotations
 import base64
 
 import numpy as np
+import pytest
+
+requires_model = pytest.mark.requires_model
 
 
 def test_twilio_voice_returns_twiml(client):
@@ -57,17 +60,30 @@ def test_twilio_ws_mulaw_to_result(client):
         ws.send_json({"event": "stop"})
 
 
+@requires_model
+def test_ml_mode_loads_real_detector():
+    """With the real checkpoint present, ml mode loads AASIST (no fallback)."""
+    from pathlib import Path
+
+    import app.models.factory as factory
+    from app.models.ml_detector import MLVoiceDetector
+
+    if not Path("models/AASIST.pth").is_file():
+        pytest.skip("AASIST checkpoint unavailable; run scripts/download_aasist.py")
+    det = factory.get_detector("ml")
+    assert isinstance(det, MLVoiceDetector)
+    assert det.is_demo is False
+    assert getattr(det, "_fallback_warning", None) is None
+
+
 def test_ml_detector_missing_checkpoint_falls_back(monkeypatch):
+    """Documented fallback: ml + missing checkpoint -> DemoVoiceDetector with
+    an explicit visible warning. Asserts the fallback, never silent REAL ML."""
     import app.models.factory as factory
     from app.models.demo_detector import DemoVoiceDetector
     from app.models.ml_detector import MLVoiceDetector, ModelNotAvailableError
 
-    # With the real checkpoint present, ml mode loads AASIST for real.
-    det = factory.get_detector("ml")
-    assert isinstance(det, MLVoiceDetector)
-    assert getattr(det, "_fallback_warning", None) is None
-
-    # With a bogus path, construction refuses loudly...
+    # Construction with a bogus path refuses loudly...
     monkeypatch.setenv("VAUTH_MODEL_PATH", "models/does-not-exist.pt")
     try:
         MLVoiceDetector()
@@ -78,4 +94,7 @@ def test_ml_detector_missing_checkpoint_falls_back(monkeypatch):
     # ...and the factory falls back to DEMO only with an explicit warning.
     det2 = factory.get_detector("ml")
     assert isinstance(det2, DemoVoiceDetector)
-    assert getattr(det2, "_fallback_warning", None)
+    assert det2.is_demo is True
+    warning = getattr(det2, "_fallback_warning", None)
+    assert warning, "fallback must carry a visible warning"
+    assert "DEMO" in warning

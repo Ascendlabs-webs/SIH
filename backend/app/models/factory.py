@@ -23,40 +23,45 @@ def _demo_with_warning(message: str) -> DemoVoiceDetector:
     return det
 
 
+# Registry of detector names -> detector classes. Introspectable WITHOUT
+# loading any model weights (construction happens only in build_detector).
+REGISTRY: dict[str, type] = {}
+
+
+def _registry() -> dict[str, type]:
+    global REGISTRY
+    if not REGISTRY:
+        from app.models.demo_detector import DemoVoiceDetector as Demo
+        from app.models.ml_detector import MLVoiceDetector
+        from app.models.onnx_detector import (AASISTDetector,
+                                              SpectraAASIST3Detector,
+                                              SpectraAASISTDetector,
+                                              W2V2AASISTDetector)
+
+        REGISTRY = {
+            "demo": Demo,
+            "ml": MLVoiceDetector,
+            "aasist": AASISTDetector,
+            "spectra": SpectraAASISTDetector,
+            "spectra3": SpectraAASIST3Detector,
+            "w2v2_aasist": W2V2AASISTDetector,
+        }
+    return REGISTRY
+
+
 def build_detector(name: str) -> BaseVoiceDetector:
     """Construct a detector by canonical name; raises on failure (no fallback)."""
     if name == "demo":
         det = DemoVoiceDetector()
         det._fallback_warning = None  # type: ignore[attr-defined]
         return det
-    if name in ("ml", "aasist"):
-        from app.models.ml_detector import MLVoiceDetector
-        from app.models.onnx_detector import AASISTDetector
-
-        cls = MLVoiceDetector if name == "ml" else AASISTDetector
-        det = cls()
-        det._fallback_warning = None  # type: ignore[attr-defined]
-        return det
-    if name == "spectra":
-        from app.models.onnx_detector import SpectraAASISTDetector
-
-        det = SpectraAASISTDetector()
-        det._fallback_warning = None  # type: ignore[attr-defined]
-        return det
-    if name == "spectra3":
-        from app.models.onnx_detector import SpectraAASIST3Detector
-
-        det = SpectraAASIST3Detector()
-        det._fallback_warning = None  # type: ignore[attr-defined]
-        return det
-    if name == "w2v2_aasist":
-        from app.models.onnx_detector import W2V2AASISTDetector
-
-        det = W2V2AASISTDetector()
-        det._fallback_warning = None  # type: ignore[attr-defined]
-        return det
-    raise ValueError(f"Unknown detector '{name}'. "
-                     "Use demo|ml|aasist|spectra|spectra3|w2v2_aasist.")
+    registry = _registry()
+    if name not in registry:
+        raise ValueError(f"Unknown detector '{name}'. "
+                         f"Use {'|'.join(sorted(registry))}.")
+    det = registry[name]()
+    det._fallback_warning = None  # type: ignore[attr-defined]
+    return det
 
 
 def get_detector(name: str | None = None) -> BaseVoiceDetector:

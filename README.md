@@ -199,7 +199,27 @@ Future (NOT built — roadmap only):
 
 ## Tests
 
+Model weights are intentionally excluded from Git (see `.gitignore`), so a
+clean clone is fully testable without them: model-dependent tests skip with
+a clear message instead of failing.
+
 ```powershell
+# CLEAN REPOSITORY: clone, install, test — zero failures expected
 cd backend
-py -m pytest -q
+py -m pip install -r requirements.txt
+py -m pytest -q                      # PASS + legitimate SKIPPED model tests
+py -m pytest -q -m requires_model    # selects only model tests (skip without weights)
 ```
+
+```powershell
+# REAL ML: download the official checkpoint(s), then run the model tests
+py ..\scripts\download_aasist.py     # -> models/AASIST.pth (git-ignored)
+$env:VAUTH_DETECTOR = "spectra3"     # demo|ml|aasist|spectra|spectra3|w2v2_aasist
+py -m pytest -q                      # full suite incl. model tests
+py -m pytest -q -m requires_model    # model tests execute (not skipped)
+```
+
+Detector selection stays configurable (`VAUTH_DETECTOR`, `VAUTH_MODEL_PATH`);
+nothing is hard-coded for tests. `VAUTH_DETECTOR=demo` always works without
+weights; requesting an ML mode without its checkpoint falls back to DEMO with
+an explicit warning (logs + `/api/model/status` + dashboard banner).
