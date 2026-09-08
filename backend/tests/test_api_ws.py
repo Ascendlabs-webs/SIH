@@ -91,6 +91,13 @@ def test_demo_synthetic_uses_beeps_in_demo_mode(client):
     assert body["audio_source"] == "demo_synthetic.wav"  # ML modes use demo_synthetic_tts.wav
 
 
+def test_demo_genuine_uses_beeps_in_demo_mode(client):
+    r = client.post("/api/demo/start", json={"scenario": "real", "context": {"call_type": "demo"}})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["audio_source"] == "demo_real.wav"  # ML modes use demo_real_speech.wav
+
+
 def test_websocket_streams_windows(client):
     from tests.conftest import make_tone
 

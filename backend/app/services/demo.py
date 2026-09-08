@@ -14,15 +14,22 @@ DEMO_DIR = ROOT / "data" / "demo"
 
 
 def demo_path(scenario: str) -> Path:
+    ml_mode = get_settings().detector != "demo"
     if scenario == "synthetic":
         # In REAL ML mode the attack sample must be real synthetic speech:
         # placeholder beeps are not speech and benchmark models do not treat
         # them as attacks. In DEMO mode the beeps drive the heuristic.
-        if get_settings().detector != "demo":
+        if ml_mode:
             tts = DEMO_DIR / "demo_synthetic_tts.wav"
             if tts.exists():
                 return tts
         return DEMO_DIR / "demo_synthetic.wav"
+    if scenario == "real" and ml_mode:
+        # Same rule for genuine: beeps read as spoof under benchmark models,
+        # so play recorded human speech in REAL ML mode.
+        speech = DEMO_DIR / "demo_real_speech.wav"
+        if speech.exists():
+            return speech
     if scenario == "real_speech":
         # Recorded human speech (CMU Arctic, research use): the genuine demo
         # that scores REAL under benchmark ML models too. Beeps are not speech.
