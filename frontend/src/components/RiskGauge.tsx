@@ -16,7 +16,7 @@ export function RiskGauge({ risk, level, classification }: { risk: number; level
           strokeWidth="16"
           strokeLinecap="round"
           strokeDasharray={`${risk * 276.5} 276.5`}
-          style={{ transition: 'stroke-dashoffset 0.4s, stroke 0.4s' }}
+          style={{ transition: 'stroke-dashoffset 0.4s, stroke 0.4s', filter: `drop-shadow(0 2px 6px ${color}55)` }}
         />
         <g transform={`rotate(${angle} 100 100)`}>
           <line x1="100" y1="100" x2="100" y2="34" stroke="#334155" strokeWidth="3" strokeLinecap="round" />
