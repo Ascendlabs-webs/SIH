@@ -1,6 +1,7 @@
 """VAuth FastAPI entrypoint."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -14,6 +15,26 @@ from app.websocket.audio_ws import router as ws_router
 
 settings = get_settings()
 log = logging.getLogger("vauth")
+
+
+def _warmup_sync() -> None:
+    """Trigger librosa/numba cold compile once so the first real request is fast."""
+    import numpy as np
+
+    from app.features.extractor import AudioFeatureExtractor
+
+    sr = 16000
+    t = np.arange(sr) / sr
+    tone = (0.3 * np.sin(2 * np.pi * 160 * t)).astype(np.float32)
+    AudioFeatureExtractor().extract(tone, sr)
+
+
+async def _warmup() -> None:
+    try:
+        await asyncio.to_thread(_warmup_sync)
+        log.info("Feature pipeline warmed up")
+    except Exception as exc:
+        log.warning("Warmup failed (non-fatal): %s", exc)
 
 
 @asynccontextmanager
@@ -34,6 +55,7 @@ async def lifespan(app: FastAPI):
             getattr(det, "model_name", getattr(det, "name", "?")),
             getattr(det, "device", "n/a"),
         )
+    asyncio.create_task(_warmup())
     yield
 
 app = FastAPI(title="VAuth", version=settings.version, description="AI-powered real-time voice cloning impersonation detection (defensive).", lifespan=lifespan)
