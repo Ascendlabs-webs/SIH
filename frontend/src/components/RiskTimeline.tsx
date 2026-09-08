@@ -25,11 +25,11 @@ export function RiskTimeline({ data }: { data: AnalysisResult[] }) {
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={pts} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
-            <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+            <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
             <XAxis dataKey="i" stroke="#64748b" tick={{ fontSize: 11 }} label={{ value: 'window', fill: '#64748b', fontSize: 11, position: 'insideBottomRight' }} />
             <YAxis domain={[0, 1]} stroke="#64748b" tick={{ fontSize: 11 }} />
             <Tooltip
-              contentStyle={{ background: '#0f172a', border: '1px solid #334155', color: '#e2e8f0', fontSize: 12 }}
+              contentStyle={{ background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', fontSize: 12 }}
               labelFormatter={(v) => `window ${v}`}
             />
             <ReferenceLine y={0.6} stroke="#eab308" strokeDasharray="4 4" />
