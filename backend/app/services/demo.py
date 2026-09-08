@@ -14,14 +14,19 @@ DEMO_DIR = ROOT / "data" / "demo"
 
 
 def demo_path(scenario: str) -> Path:
-    name = "demo_synthetic.wav" if scenario in ("synthetic",) else "demo_real.wav"
-    return DEMO_DIR / name
+    if scenario == "synthetic":
+        return DEMO_DIR / "demo_synthetic.wav"
+    if scenario == "real_speech":
+        # Recorded human speech (CMU Arctic, research use): the genuine demo
+        # that scores REAL under benchmark ML models too. Beeps are not speech.
+        return DEMO_DIR / "demo_real_speech.wav"
+    return DEMO_DIR / "demo_real.wav"
 
 
 def run_demo(scenario: str, context: dict | None = None) -> dict:
     import soundfile as sf
 
-    scenario = "synthetic" if scenario == "synthetic" else "real"
+    scenario = {"synthetic": "synthetic", "real_speech": "real_speech"}.get(scenario, "real")
     path = demo_path(scenario)
     if not path.exists():
         raise FileNotFoundError(

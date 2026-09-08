@@ -87,7 +87,7 @@ class StatusResponse(BaseModel):
 
 
 class DemoStartRequest(BaseModel):
-    scenario: Literal["real", "synthetic", "genuine"] = "real"
+    scenario: Literal["real", "synthetic", "genuine", "real_speech"] = "real"
     context: CallContext = Field(default_factory=CallContext)
 
 

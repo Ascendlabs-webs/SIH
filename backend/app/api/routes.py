@@ -112,12 +112,12 @@ async def analyze_file(
 def demo_start(req: DemoStartRequest) -> DemoStartResponse:
     from app.services.demo import run_demo
 
-    scenario = "synthetic" if req.scenario == "synthetic" else "real"
+    scenario = {"synthetic": "synthetic", "real_speech": "real_speech"}.get(req.scenario, "real")
     try:
         out = run_demo(scenario, req.context.model_dump())
     except FileNotFoundError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-    label = "Genuine voice demo" if scenario == "real" else "Synthetic voice demo"
+    label = {"synthetic": "Synthetic voice demo", "real_speech": "Recorded human speech demo"}.get(scenario, "Genuine voice demo")
     return DemoStartResponse(
         scenario=scenario,
         windows=out["windows"],
@@ -156,7 +156,7 @@ def protection_action(req: ProtectionActionRequest) -> ProtectionStateResponse:
 
 @router.get("/demo/audio")
 def demo_audio(scenario: str = "real"):
-    scenario = "synthetic" if scenario == "synthetic" else "real"
+    scenario = {"synthetic": "synthetic", "real_speech": "real_speech"}.get(scenario, "real")
     path = demo_path(scenario)
     if not path.exists():
         raise HTTPException(status_code=404, detail="Demo audio not generated yet. Run scripts/generate_demo_audio.py")

@@ -25,6 +25,14 @@ export default function App() {
   const [prot, setProt] = useState<ProtectionSnapshot | null>(null);
   const [model, setModel] = useState<ModelStatus | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const cancelInflight = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    abortRef.current?.abort();
+    abortRef.current = null;
+  };
 
   const refreshProtection = () => {
     getProtection().then(setProt).catch(() => undefined);
@@ -56,7 +64,10 @@ export default function App() {
   const level = last?.alert_level ?? 'GREEN';
   const color = levelColor(level);
 
-  const playDemo = async (scenario: 'real' | 'synthetic') => {
+  const playDemo = async (scenario: 'real' | 'synthetic' | 'real_speech') => {
+    cancelInflight();
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
     setBusy(true);
     const modelName = model?.model_name ?? 'detector';
     const slow = model && !model.is_demo;
@@ -64,7 +75,7 @@ export default function App() {
     try {
       reset();
       await protectionAction('reset').catch(() => undefined);
-      const out = await startDemo(scenario, { ...ctx, call_type: 'demo' });
+      const out = await startDemo(scenario, { ...ctx, call_type: 'demo' }, { signal: ctrl.signal });
       setMode('DEMO');
       setNotice(out.message + (slow ? ' Note: placeholder beeps are out-of-distribution for benchmark models — scores reflect the real model, not the demo script.' : ''));
       // Replay windows progressively so the timeline/chart feel live.
@@ -73,8 +84,10 @@ export default function App() {
       });
       timers.current.push(setTimeout(refreshProtection, 450 * (out.results.length + 1)));
     } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return; // superseded run
       setNotice(e instanceof Error ? e.message : 'Demo failed. Is the backend running? Did you generate demo audio?');
     } finally {
+      if (abortRef.current === ctrl) abortRef.current = null;
       setBusy(false);
     }
   };
@@ -160,12 +173,13 @@ export default function App() {
           <div className="controls">
             <button disabled={busy} onClick={() => void playDemo('real')} className="btn genuine">{busy ? '⏳ Analyzing…' : '▶ Start Genuine Voice Demo'}</button>
             <button disabled={busy} onClick={() => void playDemo('synthetic')} className="btn synth">{busy ? '⏳ Analyzing…' : '▶ Start Synthetic Voice Demo'}</button>
+            <button disabled={busy} onClick={() => void playDemo('real_speech')} className="btn genuine">{busy ? '⏳ Analyzing…' : '▶ Start Real Speech Demo'}</button>
             <button onClick={() => void toggleMic()} className="btn ghost">{mic.active ? '■ Stop Microphone' : '◉ Use Microphone (Live)'}</button>
             <label className="btn ghost file">
               ⤒ Upload WAV
               <input type="file" accept=".wav,audio/wav" hidden onChange={(e) => void onUpload(e.target.files?.[0])} />
             </label>
-            <button onClick={() => { reset(); void resetDemo(); refreshProtection(); setNotice('Session cleared.'); }} className="btn ghost">Reset</button>
+            <button onClick={() => { cancelInflight(); reset(); void resetDemo(); refreshProtection(); setNotice('Session cleared.'); }} className="btn ghost">Reset</button>
           </div>
           {(notice || lastError || mic.error) && (
             <div className="notice">{notice ?? lastError ?? mic.error}</div>

@@ -22,13 +22,15 @@ export async function fetchHistory(limit = 100): Promise<AnalysisResult[]> {
 }
 
 export async function startDemo(
-  scenario: 'real' | 'synthetic',
+  scenario: 'real' | 'synthetic' | 'real_speech',
   context: CallContext,
+  opts: { signal?: AbortSignal } = {},
 ): Promise<{ scenario: string; windows: number; results: AnalysisResult[]; message: string }> {
   const r = await fetch('/api/demo/start', {
     method: 'POST',
     headers: JSON_HEADERS,
     body: JSON.stringify({ scenario, context }),
+    signal: opts.signal,
   });
   if (!r.ok) throw new Error(`demo/start ${r.status}: ${await r.text()}`);
   return r.json();

@@ -74,6 +74,15 @@ def test_websocket_binary_frames_mic_path(client):
         assert got["window_duration"] > 2.0
 
 
+def test_demo_start_real_speech(client):
+    r = client.post("/api/demo/start", json={"scenario": "real_speech", "context": {"call_type": "demo"}})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["scenario"] == "real_speech"
+    assert body["windows"] >= 3
+    assert all(0.0 <= x["risk_score"] <= 1.0 for x in body["results"])
+
+
 def test_websocket_streams_windows(client):
     from tests.conftest import make_tone
 
