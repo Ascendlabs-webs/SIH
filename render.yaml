@@ -1,0 +1,21 @@
+# Render deployment for the VAuth backend (free tier compatible, DEMO mode).
+# NOTE: model weights (*.onnx, *.pth) are NOT in git and exceed free-tier
+# disk, so Render runs VAUTH_DETECTOR=demo. REAL ML needs a paid disk with
+# weights uploaded + VAUTH_DETECTOR changed accordingly.
+services:
+  - type: web
+    name: vauth-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.12
+      - key: VAUTH_ENV
+        value: production
+      - key: VAUTH_DETECTOR
+        value: demo
+      - key: VAUTH_CORS_ORIGINS
+        value: "*"   # tighten to https://<your-vercel-app>.vercel.app after deploy

@@ -7,7 +7,10 @@ scipy==1.15.3
 librosa==0.11.0
 soundfile==0.14.0
 scikit-learn==1.7.2
-torch --extra-index-url https://download.pytorch.org/whl/cpu
+# CPU-only PyTorch (keeps Render/slim installs small; CUDA is never needed)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1
+onnxruntime==1.23.2
 websockets==16.1.1
 httpx==0.28.1
 pytest==9.1.1

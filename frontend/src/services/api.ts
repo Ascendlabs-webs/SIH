@@ -2,20 +2,28 @@ import type { AnalysisResult, CallContext, ModelStatus, ProtectionSnapshot, Stat
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
+// Split-hosting support: set VITE_API_URL (https://<render-app>.onrender.com)
+// and VITE_WS_URL (wss://<render-app>.onrender.com) on Vercel. Local dev
+// leaves them empty so relative URLs + the Vite proxy apply.
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined ?? '').replace(/\/$/, '');
+const WS_BASE = (import.meta.env.VITE_WS_URL as string | undefined ?? '').replace(/\/$/, '');
+
+const api = (path: string) => `${API_BASE}${path}`;
+
 export async function fetchStatus(): Promise<StatusResponse> {
-  const r = await fetch('/api/status');
+  const r = await fetch(api('/api/status'));
   if (!r.ok) throw new Error(`status ${r.status}`);
   return r.json();
 }
 
 export async function fetchHealth(): Promise<{ status: string }> {
-  const r = await fetch('/health');
+  const r = await fetch(api('/health'));
   if (!r.ok) throw new Error(`health ${r.status}`);
   return r.json();
 }
 
 export async function fetchHistory(limit = 100): Promise<AnalysisResult[]> {
-  const r = await fetch(`/api/history?limit=${limit}`);
+  const r = await fetch(api(`/api/history?limit=${limit}`));
   if (!r.ok) throw new Error(`history ${r.status}`);
   const j = await r.json();
   return j.results ?? [];
@@ -26,7 +34,7 @@ export async function startDemo(
   context: CallContext,
   opts: { signal?: AbortSignal } = {},
 ): Promise<{ scenario: string; windows: number; results: AnalysisResult[]; message: string }> {
-  const r = await fetch('/api/demo/start', {
+  const r = await fetch(api('/api/demo/start'), {
     method: 'POST',
     headers: JSON_HEADERS,
     body: JSON.stringify({ scenario, context }),
@@ -37,21 +45,21 @@ export async function startDemo(
 }
 
 export async function stopDemo(): Promise<void> {
-  await fetch('/api/demo/stop', { method: 'POST' });
+  await fetch(api('/api/demo/stop'), { method: 'POST' });
 }
 
 export async function resetDemo(): Promise<void> {
-  await fetch('/api/demo/reset', { method: 'POST' });
+  await fetch(api('/api/demo/reset'), { method: 'POST' });
 }
 
 export async function getProtection(): Promise<ProtectionSnapshot> {
-  const r = await fetch('/api/protection/state');
+  const r = await fetch(api('/api/protection/state'));
   if (!r.ok) throw new Error(`protection ${r.status}`);
   return r.json();
 }
 
 export async function getModelStatus(): Promise<ModelStatus> {
-  const r = await fetch('/api/model/status');
+  const r = await fetch(api('/api/model/status'));
   if (!r.ok) throw new Error(`model/status ${r.status}`);
   return r.json();
 }
@@ -59,7 +67,7 @@ export async function getModelStatus(): Promise<ModelStatus> {
 export async function protectionAction(
   action: 'request_otp' | 'request_callback' | 'mark_verified' | 'escalate' | 'reset',
 ): Promise<ProtectionSnapshot> {
-  const r = await fetch('/api/protection/action', {
+  const r = await fetch(api('/api/protection/action'), {
     method: 'POST',
     headers: JSON_HEADERS,
     body: JSON.stringify({ action }),
@@ -80,12 +88,13 @@ export async function analyzeFile(
     sensitive_action: String(context.sensitive_action),
     call_type: context.call_type,
   });
-  const r = await fetch(`/api/analyze-file?${q.toString()}`, { method: 'POST', body: fd });
+  const r = await fetch(api(`/api/analyze-file?${q.toString()}`), { method: 'POST', body: fd });
   if (!r.ok) throw new Error(`analyze-file ${r.status}: ${await r.text()}`);
   return r.json();
 }
 
 export function wsUrl(path: string): string {
+  if (WS_BASE) return `${WS_BASE}${path}`;
   const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
   // In dev, vite proxies /ws -> backend; use same host so proxy applies.
   return `${proto}://${window.location.host}${path}`;

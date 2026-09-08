@@ -197,6 +197,28 @@ Future (NOT built — roadmap only):
 3. Add auth/rate-limiting, persistent audit log, PROM metrics, CI, signed model artifacts.
 4. Harden Twilio signature validation, TLS termination, PII redaction.
 
+## Deploy (frontend on Vercel, backend on Render)
+
+The repo is split-hosting ready. No code changes needed — only dashboard config.
+
+**1. Backend → Render**
+- New Web Service → connect `Ascendlabs-webs/SIH` → Render reads `render.yaml`
+  (root dir `backend`, `/health` check, `VAUTH_DETECTOR=demo`).
+- Free tier runs DEMO mode (weights aren't in git and exceed free disk).
+  After deploy, note your URL: `https://<name>.onrender.com`.
+- Optional: tighten `VAUTH_CORS_ORIGINS` to your Vercel URL.
+
+**2. Frontend → Vercel**
+- Import the repo → Root Directory `frontend` (Vite preset; build `npm run build`, output `dist`).
+- Environment Variables:
+  - `VITE_API_URL=https://<render-name>.onrender.com`
+  - `VITE_WS_URL=wss://<render-name>.onrender.com`
+- Redeploy. The dashboard talks directly to Render (REST + WebSocket).
+
+**Notes:** Render free spins down when idle — first load takes ~1 min.
+REAL ML on Render needs a paid disk with weights uploaded and
+`VAUTH_DETECTOR` changed; local `spectra3` remains the evaluation path.
+
 ## Tests
 
 Model weights are intentionally excluded from Git (see `.gitignore`), so a
