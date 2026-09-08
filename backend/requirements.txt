@@ -1,0 +1,17 @@
+fastapi==0.136.1
+uvicorn[standard]==0.46.0
+pydantic==2.13.4
+python-multipart==0.0.27
+numpy==2.2.6
+scipy==1.15.3
+librosa==0.11.0
+soundfile==0.14.0
+scikit-learn==1.7.2
+torch --extra-index-url https://download.pytorch.org/whl/cpu
+websockets==16.1.1
+httpx==0.28.1
+pytest==9.1.1
+anyio==4.14.1
+# Optional (gracefully degraded if absent):
+# praat-parselmouth
+# pyworld

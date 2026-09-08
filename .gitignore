@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+node_modules/
+dist/
+build/
+*.log
+data/uploads/*
+!data/uploads/.gitkeep
+models/*.pt
+models/*.pth
+models/*.PTH
+models/*.onnx
+models/*.bin
+# Local validation-only reference clips (not part of the demo, licences vary)
+data/demo/*_ref.wav
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

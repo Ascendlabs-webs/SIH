@@ -1,0 +1,90 @@
+import type { AnalysisResult, CallContext, ModelStatus, ProtectionSnapshot, StatusResponse } from '../types';
+
+const JSON_HEADERS = { 'Content-Type': 'application/json' };
+
+export async function fetchStatus(): Promise<StatusResponse> {
+  const r = await fetch('/api/status');
+  if (!r.ok) throw new Error(`status ${r.status}`);
+  return r.json();
+}
+
+export async function fetchHealth(): Promise<{ status: string }> {
+  const r = await fetch('/health');
+  if (!r.ok) throw new Error(`health ${r.status}`);
+  return r.json();
+}
+
+export async function fetchHistory(limit = 100): Promise<AnalysisResult[]> {
+  const r = await fetch(`/api/history?limit=${limit}`);
+  if (!r.ok) throw new Error(`history ${r.status}`);
+  const j = await r.json();
+  return j.results ?? [];
+}
+
+export async function startDemo(
+  scenario: 'real' | 'synthetic',
+  context: CallContext,
+): Promise<{ scenario: string; windows: number; results: AnalysisResult[]; message: string }> {
+  const r = await fetch('/api/demo/start', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ scenario, context }),
+  });
+  if (!r.ok) throw new Error(`demo/start ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+export async function stopDemo(): Promise<void> {
+  await fetch('/api/demo/stop', { method: 'POST' });
+}
+
+export async function resetDemo(): Promise<void> {
+  await fetch('/api/demo/reset', { method: 'POST' });
+}
+
+export async function getProtection(): Promise<ProtectionSnapshot> {
+  const r = await fetch('/api/protection/state');
+  if (!r.ok) throw new Error(`protection ${r.status}`);
+  return r.json();
+}
+
+export async function getModelStatus(): Promise<ModelStatus> {
+  const r = await fetch('/api/model/status');
+  if (!r.ok) throw new Error(`model/status ${r.status}`);
+  return r.json();
+}
+
+export async function protectionAction(
+  action: 'request_otp' | 'request_callback' | 'mark_verified' | 'escalate' | 'reset',
+): Promise<ProtectionSnapshot> {
+  const r = await fetch('/api/protection/action', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ action }),
+  });
+  if (!r.ok) throw new Error(`protection/action ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+export async function analyzeFile(
+  file: File,
+  context: CallContext,
+): Promise<AnalysisResult> {
+  const fd = new FormData();
+  fd.append('file', file);
+  const q = new URLSearchParams({
+    caller_known: String(context.caller_known),
+    pending_transaction: String(context.pending_transaction),
+    sensitive_action: String(context.sensitive_action),
+    call_type: context.call_type,
+  });
+  const r = await fetch(`/api/analyze-file?${q.toString()}`, { method: 'POST', body: fd });
+  if (!r.ok) throw new Error(`analyze-file ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+export function wsUrl(path: string): string {
+  const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  // In dev, vite proxies /ws -> backend; use same host so proxy applies.
+  return `${proto}://${window.location.host}${path}`;
+}

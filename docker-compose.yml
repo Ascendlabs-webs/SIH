@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - VAUTH_DETECTOR=demo
+      - VAUTH_CORS_ORIGINS=*
+    volumes:
+      - ./data:/app/data
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend

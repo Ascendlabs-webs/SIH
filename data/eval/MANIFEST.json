@@ -1,0 +1,38 @@
+{
+  "genuine_source": "CMU Arctic cmu_us_bdl_arctic (research use)",
+  "synthetic_source": "edge-tts generations of the same transcripts",
+  "pairs": [
+    {
+      "uttid": "arctic_a0001",
+      "text": "Author of the danger trail, Philip Steels, etc."
+    },
+    {
+      "uttid": "arctic_a0002",
+      "text": "Not at this particular case, Tom, apologized Whittemore."
+    },
+    {
+      "uttid": "arctic_a0003",
+      "text": "For the twentieth time that evening the two men shook hands."
+    },
+    {
+      "uttid": "arctic_a0004",
+      "text": "Lord, but I'm glad to see you again, Phil."
+    },
+    {
+      "uttid": "arctic_a0006",
+      "text": "God bless 'em, I hope I'll go on seeing them forever."
+    },
+    {
+      "uttid": "arctic_a0007",
+      "text": "And you always want to see it in the superlative degree."
+    },
+    {
+      "uttid": "arctic_a0008",
+      "text": "Gad, your letter came just in time."
+    },
+    {
+      "uttid": "arctic_a0009",
+      "text": "He turned sharply, and faced Gregson across the table."
+    }
+  ]
+}

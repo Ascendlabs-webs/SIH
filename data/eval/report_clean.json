@@ -1,0 +1,377 @@
+{
+  "model": "AASIST",
+  "device": "cpu",
+  "window_sec": 2.5,
+  "aggregate": "mean",
+  "telephony": false,
+  "files": [
+    {
+      "group": "default",
+      "label": 0,
+      "file": "data/eval/real\\arctic_a0001.wav",
+      "variant": "clean",
+      "score": 0.951288104057312,
+      "windows": 1
+    },
+    {
+      "group": "default",
+      "label": 0,
+      "file": "data/eval/real\\arctic_a0002.wav",
+      "variant": "clean",
+      "score": 0.9998762607574463,
+      "windows": 1
+    },
+    {
+      "group": "default",
+      "label": 0,
+      "file": "data/eval/real\\arctic_a0003.wav",
+      "variant": "clean",
+      "score": 0.9999033212661743,
+      "windows": 1
+    },
+    {
+      "group": "default",
+      "label": 0,
+      "file": "data/eval/real\\arctic_a0004.wav",
+      "variant": "clean",
+      "score": 0.8229876160621643,
+      "windows": 1
+    },
+    {
+      "group": "default",
+      "label": 0,
+      "file": "data/eval/real\\arctic_a0006.wav",
+      "variant": "clean",
+      "score": 0.9962691068649292,
+      "windows": 1
+    },
+    {
+      "group": "default",
+      "label": 0,
+      "file": "data/eval/real\\arctic_a0007.wav",
+      "variant": "clean",
+      "score": 0.9989684820175171,
+      "windows": 1
+    },
+    {
+      "group": "default",
+      "label": 0,
+      "file": "data/eval/real\\arctic_a0008.wav",
+      "variant": "clean",
+      "score": 0.9087579250335693,
+      "windows": 1
+    },
+    {
+      "group": "default",
+      "label": 0,
+      "file": "data/eval/real\\arctic_a0009.wav",
+      "variant": "clean",
+      "score": 0.9887024164199829,
+      "windows": 1
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0001__en-US-AriaNeural.wav",
+      "variant": "clean",
+      "score": 0.33295638859272003,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0001__en-US-GuyNeural.wav",
+      "variant": "clean",
+      "score": 0.4542277859291062,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0002__en-US-AriaNeural.wav",
+      "variant": "clean",
+      "score": 0.877630889415741,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0002__en-US-GuyNeural.wav",
+      "variant": "clean",
+      "score": 0.51729366928339,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0003__en-US-AriaNeural.wav",
+      "variant": "clean",
+      "score": 0.04656905122101307,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0003__en-US-GuyNeural.wav",
+      "variant": "clean",
+      "score": 0.03052850440144539,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0004__en-US-AriaNeural.wav",
+      "variant": "clean",
+      "score": 0.5001845404040068,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0004__en-US-GuyNeural.wav",
+      "variant": "clean",
+      "score": 0.9999401569366455,
+      "windows": 1
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0006__en-US-AriaNeural.wav",
+      "variant": "clean",
+      "score": 0.45974959099839907,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0006__en-US-GuyNeural.wav",
+      "variant": "clean",
+      "score": 0.18530310597270727,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0007__en-US-AriaNeural.wav",
+      "variant": "clean",
+      "score": 0.40185760660097003,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0007__en-US-GuyNeural.wav",
+      "variant": "clean",
+      "score": 0.13011490635108203,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0008__en-US-AriaNeural.wav",
+      "variant": "clean",
+      "score": 0.569932222366333,
+      "windows": 1
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0008__en-US-GuyNeural.wav",
+      "variant": "clean",
+      "score": 0.5029972195625305,
+      "windows": 1
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0009__en-US-AriaNeural.wav",
+      "variant": "clean",
+      "score": 0.055334812961518764,
+      "windows": 2
+    },
+    {
+      "group": "default",
+      "label": 1,
+      "file": "data/eval/synthetic\\arctic_a0009__en-US-GuyNeural.wav",
+      "variant": "clean",
+      "score": 0.5005546094616875,
+      "windows": 2
+    }
+  ],
+  "clean": {
+    "n": 24,
+    "threshold": 0.5,
+    "accuracy": 0.2916666666666667,
+    "precision": 0.4666666666666667,
+    "recall": 0.4375,
+    "f1": 0.45161290322580644,
+    "roc_auc": 0.0703125,
+    "eer": 0.875,
+    "eer_threshold": 0.877630889415741,
+    "youden_threshold": 0.9999401569366455,
+    "youden_j": 0.0625,
+    "confusion_matrix": {
+      "tn": 0,
+      "fp": 8,
+      "fn": 9,
+      "tp": 7
+    },
+    "genuine_scores": {
+      "n": 8,
+      "mean": 0.9583441540598869,
+      "std": 0.059468811947770144,
+      "min": 0.8229876160621643,
+      "max": 0.9999033212661743,
+      "hist10": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        7
+      ],
+      "edges10": [
+        0.0,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        1.0
+      ]
+    },
+    "synthetic_scores": {
+      "n": 16,
+      "mean": 0.410323441278706,
+      "std": 0.2704052564064264,
+      "min": 0.03052850440144539,
+      "max": 0.9999401569366455,
+      "hist10": [
+        3,
+        2,
+        0,
+        1,
+        3,
+        5,
+        0,
+        0,
+        1,
+        1
+      ],
+      "edges10": [
+        0.0,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        1.0
+      ]
+    },
+    "n_genuine": 8,
+    "n_synthetic": 16,
+    "groups": {
+      "default": {
+        "n": 24,
+        "threshold": 0.5,
+        "accuracy": 0.2916666666666667,
+        "precision": 0.4666666666666667,
+        "recall": 0.4375,
+        "f1": 0.45161290322580644,
+        "roc_auc": 0.0703125,
+        "eer": 0.875,
+        "eer_threshold": 0.877630889415741,
+        "youden_threshold": 0.9999401569366455,
+        "youden_j": 0.0625,
+        "confusion_matrix": {
+          "tn": 0,
+          "fp": 8,
+          "fn": 9,
+          "tp": 7
+        },
+        "genuine_scores": {
+          "n": 8,
+          "mean": 0.9583441540598869,
+          "std": 0.059468811947770144,
+          "min": 0.8229876160621643,
+          "max": 0.9999033212661743,
+          "hist10": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            7
+          ],
+          "edges10": [
+            0.0,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
+            1.0
+          ]
+        },
+        "synthetic_scores": {
+          "n": 16,
+          "mean": 0.410323441278706,
+          "std": 0.2704052564064264,
+          "min": 0.03052850440144539,
+          "max": 0.9999401569366455,
+          "hist10": [
+            3,
+            2,
+            0,
+            1,
+            3,
+            5,
+            0,
+            0,
+            1,
+            1
+          ],
+          "edges10": [
+            0.0,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
+            1.0
+          ]
+        }
+      }
+    }
+  },
+  "calibration": {
+    "fitted": true,
+    "method": "platt_logistic",
+    "a": -1.8529900115225293,
+    "b": 1.8598458646249199
+  }
+}

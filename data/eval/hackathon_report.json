@@ -1,0 +1,67 @@
+{
+  "statement": "Author of the danger trail, Philip Steels, etc.",
+  "context": {
+    "caller_known": false,
+    "pending_transaction": true,
+    "sensitive_action": true,
+    "call_type": "upload"
+  },
+  "ml": {
+    "available": true,
+    "model": "AASIST",
+    "device": "cpu"
+  },
+  "genuine": {
+    "file": "data/eval/real/arctic_a0001.wav",
+    "duration_sec": 3.24,
+    "vad_active_ratio": 0.272,
+    "windows": [
+      {
+        "demo_prob": 0.02,
+        "aasist_spoof_logit": 2.944,
+        "aasist_bonafide_logit": -3.079,
+        "aasist_prob": 0.9976,
+        "rolling": 0.9976,
+        "final_risk": 0.99,
+        "alert_level": "RED",
+        "recommendation": "Escalate/block sensitive action \u2014 verify via OTP, callback, or supervisor approval."
+      }
+    ]
+  },
+  "cloned": {
+    "file": "data/eval/synthetic/arctic_a0001__en-US-AriaNeural.wav",
+    "duration_sec": 4.2,
+    "vad_active_ratio": 0.419,
+    "windows": [
+      {
+        "demo_prob": 0.02,
+        "aasist_spoof_logit": 1.421,
+        "aasist_bonafide_logit": -1.901,
+        "aasist_prob": 0.9652,
+        "rolling": 0.9652,
+        "final_risk": 0.99,
+        "alert_level": "RED",
+        "recommendation": "Escalate/block sensitive action \u2014 verify via OTP, callback, or supervisor approval."
+      },
+      {
+        "demo_prob": 0.1834,
+        "aasist_spoof_logit": -1.753,
+        "aasist_bonafide_logit": 0.16,
+        "aasist_prob": 0.1286,
+        "rolling": 0.5004,
+        "final_risk": 0.6504,
+        "alert_level": "YELLOW",
+        "recommendation": "Proceed carefully \u2014 monitor for further signs."
+      }
+    ]
+  },
+  "note": "Same pipeline, same preprocessing, no score manipulation. Raw AASIST outputs reported per window.",
+  "verdict": {
+    "genuine_mean_aasist": 0.9976,
+    "cloned_mean_aasist": 0.5469,
+    "genuine_mean_demo": 0.02,
+    "cloned_mean_demo": 0.1017,
+    "genuine_final_alert": "RED",
+    "cloned_final_alert": "YELLOW"
+  }
+}
