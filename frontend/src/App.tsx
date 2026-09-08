@@ -71,11 +71,21 @@ export default function App() {
     setBusy(true);
     const modelName = model?.model_name ?? 'detector';
     const slow = model && !model.is_demo;
-    setNotice(`Analyzing with ${modelName}…${slow ? ' (REAL ML takes ~10–15 s on CPU — hold on)' : ''}`);
+    const t0 = Date.now();
+    setNotice(`Analyzing with ${modelName}… (0s)`);
+    const tick = setInterval(() => {
+      const s = Math.round((Date.now() - t0) / 1000);
+      setNotice(`Analyzing with ${modelName}… (${s}s${slow ? ' — REAL ML takes ~10–25 s on CPU' : ''})`);
+    }, 1000);
+    timers.current.push(tick);
+    const killer = setTimeout(() => ctrl.abort(), 180000);
+    timers.current.push(killer);
     try {
       reset();
       await protectionAction('reset').catch(() => undefined);
       const out = await startDemo(scenario, { ...ctx, call_type: 'demo' }, { signal: ctrl.signal });
+      clearInterval(tick);
+      clearTimeout(killer);
       setMode('DEMO');
       setNotice(out.message + (slow ? ' Note: placeholder beeps are out-of-distribution for benchmark models — scores reflect the real model, not the demo script.' : ''));
       // Replay windows progressively so the timeline/chart feel live.
@@ -84,7 +94,12 @@ export default function App() {
       });
       timers.current.push(setTimeout(refreshProtection, 450 * (out.results.length + 1)));
     } catch (e) {
-      if (e instanceof DOMException && e.name === 'AbortError') return; // superseded run
+      if (e instanceof DOMException && e.name === 'AbortError') {
+        setNotice(ctrl.signal.aborted && Date.now() - t0 >= 180000
+          ? 'Analysis timed out after 180 s — the CPU is overloaded. Press Reset and retry.'
+          : null);
+        return; // superseded run
+      }
       setNotice(e instanceof Error ? e.message : 'Demo failed. Is the backend running? Did you generate demo audio?');
     } finally {
       if (abortRef.current === ctrl) abortRef.current = null;
