@@ -15,6 +15,13 @@ DEMO_DIR = ROOT / "data" / "demo"
 
 def demo_path(scenario: str) -> Path:
     if scenario == "synthetic":
+        # In REAL ML mode the attack sample must be real synthetic speech:
+        # placeholder beeps are not speech and benchmark models do not treat
+        # them as attacks. In DEMO mode the beeps drive the heuristic.
+        if get_settings().detector != "demo":
+            tts = DEMO_DIR / "demo_synthetic_tts.wav"
+            if tts.exists():
+                return tts
         return DEMO_DIR / "demo_synthetic.wav"
     if scenario == "real_speech":
         # Recorded human speech (CMU Arctic, research use): the genuine demo
@@ -46,4 +53,5 @@ def run_demo(scenario: str, context: dict | None = None) -> dict:
     for w in windows:
         r = pipeline.process_window(w, settings.target_sample_rate, context or {"call_type": "demo"})
         results.append(r)
-    return {"scenario": scenario, "windows": len(results), "results": results}
+    return {"scenario": scenario, "windows": len(results), "results": results,
+            "audio_source": path.name}

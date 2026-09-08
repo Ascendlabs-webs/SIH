@@ -118,11 +118,14 @@ def demo_start(req: DemoStartRequest) -> DemoStartResponse:
     except FileNotFoundError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     label = {"synthetic": "Synthetic voice demo", "real_speech": "Recorded human speech demo"}.get(scenario, "Genuine voice demo")
+    det_name = getattr(get_pipeline().detector, "model_name", "demo")
     return DemoStartResponse(
         scenario=scenario,
         windows=out["windows"],
         results=out["results"],
-        message=f"{label}: processed {out['windows']} windows through the real pipeline (DEMO MODEL).",
+        message=f"{label}: processed {out['windows']} windows through the real pipeline "
+                f"({det_name}, source: {out.get('audio_source', '')}).",
+        audio_source=out.get("audio_source", ""),
     )
 
 

@@ -79,8 +79,16 @@ def test_demo_start_real_speech(client):
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["scenario"] == "real_speech"
+    assert body["audio_source"] == "demo_real_speech.wav"
     assert body["windows"] >= 3
     assert all(0.0 <= x["risk_score"] <= 1.0 for x in body["results"])
+
+
+def test_demo_synthetic_uses_beeps_in_demo_mode(client):
+    r = client.post("/api/demo/start", json={"scenario": "synthetic", "context": {"call_type": "demo"}})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["audio_source"] == "demo_synthetic.wav"  # ML modes use demo_synthetic_tts.wav
 
 
 def test_websocket_streams_windows(client):

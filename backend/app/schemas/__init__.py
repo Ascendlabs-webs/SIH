@@ -96,6 +96,7 @@ class DemoStartResponse(BaseModel):
     windows: int
     results: List[AnalysisResult]
     message: str
+    audio_source: str = ""
 
 
 class ProtectionActionRequest(BaseModel):
