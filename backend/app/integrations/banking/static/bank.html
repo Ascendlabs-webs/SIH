@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VAuth Demo Bank — Simulated Environment</title>
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; background: #eef2f7; color: #0f172a; font-family: 'Segoe UI', system-ui, sans-serif; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px; }
+  .sim { background: #7c2d12; color: #ffedd5; text-align: center; font-weight: 800; letter-spacing: 1px; padding: 10px; border-radius: 10px; margin-bottom: 14px; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 12px; }
+  .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #e2e8f0; font-size: 14px; }
+  .row b { font-variant-numeric: tabular-nums; }
+  .status { font-weight: 800; letter-spacing: 1px; padding: 6px 12px; border-radius: 999px; display: inline-block; font-size: 13px; }
+  .PENDING { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; }
+  .PENDING_VERIFICATION { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  .APPROVED { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  .BLOCKED, .FAILED { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+  .lvl-RED { color: #dc2626; font-weight: 800; } .lvl-ORANGE { color: #c2410c; font-weight: 800; }
+  .lvl-YELLOW { color: #a16207; font-weight: 800; } .lvl-GREEN { color: #16a34a; font-weight: 800; }
+  .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  button { border: 1px solid #cbd5e1; background: #fff; border-radius: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer; font-size: 13px; }
+  button:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(15,23,42,.12); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: #0284c9; border-color: #0284c9; color: #fff; }
+  button.danger { background: #fef2f2; border-color: #fca5a5; color: #b91c1c; }
+  input, select { padding: 9px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+  .log { font-size: 12px; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
+  .err { color: #b91c1c; font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sim">SIMULATED BANKING ENVIRONMENT — NO REAL MONEY</div>
+
+  <div class="card">
+    <h1>VAuth Demo Bank</h1>
+    <div class="sub">Policy-enforced demo: VAuth decides, the bank enforces. Run a voice demo on the VAuth dashboard first to set live risk.</div>
+    <div class="row"><span>Customer</span><b>Rahul Sharma</b></div>
+    <div class="row"><span>Account</span><b>VAUTH-10001</b></div>
+    <div class="row"><span>Balance</span><b id="balance">—</b></div>
+  </div>
+
+  <div class="card">
+    <h1 style="font-size:16px">Live VAuth decision</h1>
+    <div class="row"><span>Risk</span><b id="v-risk">—</b></div>
+    <div class="row"><span>Alert</span><b id="v-alert">—</b></div>
+    <div class="row"><span>Protection</span><b id="v-prot">—</b></div>
+    <div class="sub" id="v-note">Polling the VAuth backend every 3 s.</div>
+  </div>
+
+  <div class="card">
+    <h1 style="font-size:16px">Transfer request</h1>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label>Amount (₹) <input id="amount" type="number" value="500000" min="1" step="1000" style="width:160px"></label>
+      <button class="primary" id="create">Create transfer</button>
+    </div>
+    <div id="tx"></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const inr = (n) => '₹' + Number(n).toLocaleString('en-IN');
+let txId = null;
+
+async function jget(p) { const r = await fetch(p); if (!r.ok) throw new Error(p + ' ' + r.status); return r.json(); }
+async function jpost(p, b) {
+  const r = await fetch(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: b ? JSON.stringify(b) : '{}' });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || ('HTTP ' + r.status));
+  return j;
+}
+
+async function refreshAccount() {
+  try { $('balance').textContent = inr((await jget('/api/banking/account')).balance); } catch {}
+}
+
+async function refreshVauth() {
+  try {
+    const v = await jget('/api/banking/vauth');
+    $('v-risk').textContent = Math.round(v.risk_score * 100) + '%';
+    $('v-alert').innerHTML = '<span class="lvl-' + v.alert_level + '">' + v.alert_level + '</span>';
+    $('v-prot').textContent = v.protection_state + (v.requires_secondary_verification ? ' (verification required)' : '');
+  } catch { $('v-note').textContent = 'VAuth backend unreachable.'; }
+}
+
+function render(tx) {
+  const v = tx.vauth;
+  $('tx').innerHTML =
+    '<div class="row"><span>ID</span><b>' + tx.id + '</b></div>' +
+    '<div class="row"><span>Amount</span><b>' + inr(tx.amount) + '</b></div>' +
+    '<div class="row"><span>VAuth risk</span><b>' + Math.round(v.risk_score * 100) + '% · <span class="lvl-' + v.alert_level + '">' + v.alert_level + '</span></b></div>' +
+    '<div class="row"><span>Status</span><span class="status ' + tx.status + '">' + tx.status + '</span></div>' +
+    '<div class="log">' + tx.reason + (tx.required_actions.length ? '<br>Required: ' + tx.required_actions.join(' · ') : '') +
+    (tx.verification.length ? '<br>Challenges: ' + tx.verification.map(c => c.method + '=' + (c.success ? 'ok' : 'FAIL') + ' (simulated)').join(', ') : '') + '</div>' +
+    '<div class="err" id="txerr"></div>' +
+    '<div class="btns">' +
+    '<button data-a="approve" ' + (tx.status !== 'PENDING' ? 'disabled' : '') + '>Approve</button>' +
+    '<button data-a="otp" ' + (tx.status !== 'PENDING_VERIFICATION' ? 'disabled' : '') + '>Request OTP (simulate success)</button>' +
+    '<button data-a="otpfail" ' + (tx.status !== 'PENDING_VERIFICATION' ? 'disabled' : '') + '>Request OTP (simulate failure)</button>' +
+    '<button data-a="callback" ' + (tx.status !== 'PENDING_VERIFICATION' ? 'disabled' : '') + '>Request Callback</button>' +
+    '<button data-a="supervisor" ' + (tx.status !== 'PENDING_VERIFICATION' ? 'disabled' : '') + '>Supervisor Approval</button>' +
+    '<button data-a="block" class="danger" ' + ((tx.status !== 'PENDING' && tx.status !== 'PENDING_VERIFICATION') ? 'disabled' : '') + '>Block</button>' +
+    '</div>';
+  document.querySelectorAll('#tx button').forEach(b => b.onclick = () => act(b.dataset.a));
+}
+
+async function act(a) {
+  try {
+    let t;
+    if (a === 'approve') t = await jpost('/api/banking/transactions/' + txId + '/approve');
+    else if (a === 'block') t = await jpost('/api/banking/transactions/' + txId + '/block');
+    else if (a === 'otpfail') t = await jpost('/api/banking/transactions/' + txId + '/verify', { method: 'otp', success: false });
+    else t = await jpost('/api/banking/transactions/' + txId + '/verify', { method: a === 'otpfail' ? 'otp' : a, success: true });
+    render(t); refreshAccount(); refreshVauth();
+  } catch (e) { document.getElementById('txerr').textContent = e.message; }
+}
+
+$('create').onclick = async () => {
+  try {
+    const t = await jpost('/api/banking/transactions', { amount: Number($('amount').value), sensitive_action: true });
+    txId = t.id; render(t); refreshAccount(); refreshVauth();
+  } catch (e) { $('tx').innerHTML = '<div class="err">' + e.message + '</div>'; }
+};
+
+refreshAccount(); refreshVauth();
+setInterval(() => { refreshAccount(); refreshVauth(); if (txId) jget('/api/banking/transactions/' + txId).then(render).catch(() => {}); }, 3000);
+</script>
+</body>
+</html>

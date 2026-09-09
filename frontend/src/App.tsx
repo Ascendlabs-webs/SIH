@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { analyzeFile, fetchStatus, getModelStatus, getProtection, protectionAction, resetDemo, startDemo } from './services/api';
+import { analyzeFile, bankUrl, fetchStatus, getModelStatus, getProtection, protectionAction, resetDemo, startDemo } from './services/api';
 import { useVAuthWS } from './hooks/useVAuth';
 import { useMic } from './hooks/useMic';
 import { RiskGauge } from './components/RiskGauge';
@@ -163,6 +163,7 @@ export default function App() {
           </span>
           <span className={`conn ${connected ? 'on' : 'off'}`}>● {connected ? 'Connected' : 'Reconnecting…'}</span>
           <span className="mode">{mic.active ? 'LIVE' : mode}</span>
+          <a className="mode bank-link" href={bankUrl()} target="_blank" rel="noreferrer" title="Open the simulated banking demo (separate page)">Demo Bank ↗</a>
         </div>
       </header>
 

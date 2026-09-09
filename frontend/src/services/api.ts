@@ -99,3 +99,7 @@ export function wsUrl(path: string): string {
   // In dev, vite proxies /ws -> backend; use same host so proxy applies.
   return `${proto}://${window.location.host}${path}`;
 }
+
+export function bankUrl(): string {
+  return `${API_BASE}/bank`;
+}
