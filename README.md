@@ -219,6 +219,16 @@ The repo is split-hosting ready. No code changes needed — only dashboard confi
 REAL ML on Render needs a paid disk with weights uploaded and
 `VAUTH_DETECTOR` changed; local `spectra3` remains the evaluation path.
 
+## Simulated Demo Bank (VAuth-protected transactions)
+
+Separate demo surface on the same backend — VAuth decides, the bank enforces:
+
+- Bank UI: `http://127.0.0.1:8000/bank` (or the **Demo Bank ↗** link in the dashboard header). Fictional customer Rahul Sharma, `VAUTH-10001`, ₹12,50,000. SIMULATED, no real money.
+- API: `GET /api/banking/account`, `GET /api/banking/vauth` (live VAuth decision), `POST /api/banking/transactions` (create + policy check), `/{id}/hold|approve|block|verify`.
+- Policy (`backend/app/integrations/banking/policy.py`): GREEN→PENDING; ORANGE/RED+sensitive ₹ action→PENDING_VERIFICATION; RED+ordinary→PENDING with warning. `approve` on a held transaction is rejected server-side (409) — verified by tests, not just UI disabling.
+- Demo flow: run a voice demo on the dashboard (sets live risk) → create the ₹5,00,000 transfer on `/bank` → verify via simulated OTP/callback/supervisor.
+- Provider abstraction (`BankingProvider`) ships with an in-memory ledger; `fineract.py` documents the future Apache Fineract Docker integration (not wired).
+
 ## Tests
 
 Model weights are intentionally excluded from Git (see `.gitignore`), so a
