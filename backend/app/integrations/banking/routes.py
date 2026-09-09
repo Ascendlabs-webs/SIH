@@ -13,7 +13,7 @@ from app.integrations.banking.schemas import (AccountResponse,
                                               CreateTransactionRequest,
                                               TransactionResponse,
                                               VerifyRequest)
-from app.integrations.banking.service import get_bank
+from app.integrations.banking.service import get_bank, reset_bank
 from app.services.history import get_history
 from app.services.pipeline import get_pipeline
 
@@ -42,6 +42,12 @@ def _wrap(tx: dict) -> TransactionResponse:
 @router.get("/account", response_model=AccountResponse)
 def account() -> AccountResponse:
     return AccountResponse(**get_bank().account_summary())
+
+
+@router.post("/reset", response_model=AccountResponse)
+def reset_ledger() -> AccountResponse:
+    """Demo-only: restore the opening ledger (Rs.12,50,000, no transactions)."""
+    return AccountResponse(**reset_bank().account_summary())
 
 
 @router.get("/vauth", response_model=dict)

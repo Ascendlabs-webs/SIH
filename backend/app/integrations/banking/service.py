@@ -166,3 +166,10 @@ def get_bank() -> MemoryBankingProvider:
     if _bank is None:
         _bank = MemoryBankingProvider()
     return _bank
+
+
+def reset_bank() -> MemoryBankingProvider:
+    """Restore the opening demo ledger (demo-only reset)."""
+    global _bank
+    _bank = MemoryBankingProvider()
+    return _bank

@@ -42,6 +42,7 @@
     <div class="row"><span>Customer</span><b>Rahul Sharma</b></div>
     <div class="row"><span>Account</span><b>VAUTH-10001</b></div>
     <div class="row"><span>Balance</span><b id="balance">—</b></div>
+    <div class="btns"><button id="resetbank">Reset demo ledger</button></div>
   </div>
 
   <div class="card">
@@ -125,6 +126,11 @@ $('create').onclick = async () => {
     const t = await jpost('/api/banking/transactions', { amount: Number($('amount').value), sensitive_action: true });
     txId = t.id; render(t); refreshAccount(); refreshVauth();
   } catch (e) { $('tx').innerHTML = '<div class="err">' + e.message + '</div>'; }
+};
+
+document.getElementById('resetbank').onclick = async () => {
+  await jpost('/api/banking/reset'); txId = null; $('tx').innerHTML = '';
+  refreshAccount(); refreshVauth();
 };
 
 refreshAccount(); refreshVauth();

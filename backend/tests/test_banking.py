@@ -105,3 +105,12 @@ def test_api_verify_success_approves_over_http(client):
 
 def test_api_unknown_transaction_404(client):
     assert client.get("/api/banking/transactions/nope").status_code == 404
+
+
+def test_api_reset_restores_ledger(client):
+    from app.integrations.banking.service import get_bank
+
+    get_bank().balance = 1.0
+    body = client.post("/api/banking/reset").json()
+    assert body["balance"] == 1_250_000.0
+    assert body["customer"] == "Rahul Sharma"
