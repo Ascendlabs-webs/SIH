@@ -35,7 +35,17 @@ def _public_ws_host(request: Request) -> str:
 
 
 @router.post("/twilio/voice")
-def twilio_voice(request: Request) -> Response:
+def twilio_voice_post(request: Request) -> Response:
+    return _twiml_response(request)
+
+
+@router.get("/twilio/voice")
+def twilio_voice_get(request: Request) -> Response:
+    """Same TwiML over GET (Twilio console tester + GET-configured numbers)."""
+    return _twiml_response(request)
+
+
+def _twiml_response(request: Request) -> Response:
     host = _public_ws_host(request)
     twiml = (
         '<?xml version="1.0" encoding="UTF-8"?>'
