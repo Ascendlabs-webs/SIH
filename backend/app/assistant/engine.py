@@ -48,8 +48,6 @@ def answer(question: str, client_state: dict | None = None) -> dict:
              "alert": str(client_state.get("alert_level", s["alert"])),
              "classification": str(client_state.get("classification", s["classification"])),
              "has_result": True}
-    q = (question or "").lower()
-    s = _snapshot()
     ctx = {"risk_score": s["risk"], "alert_level": s["alert"],
            "protection_state": s["protection"], "model": s["model"],
            "is_demo": s["is_demo"]}
