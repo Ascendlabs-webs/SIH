@@ -117,6 +117,29 @@ a.mode.bank-link:hover { background: #1e3a5f; border-color: #2f7bff; color: #fff
 .protect-btns .btn { flex: 1 1 auto; }
 .protect-btns .btn.warn { width: auto; margin-top: 0; }
 .foot { text-align: center; font-size: 11px; color: #94a3b8; padding: 12px; border-top: 1px solid #e2e8f0; background: #ffffff; }
+.chat-fab {
+  position: fixed; right: 18px; bottom: 18px; z-index: 50;
+  background: linear-gradient(135deg, #1d4ed8, #16a34a); color: #fff; border: none;
+  border-radius: 999px; padding: 12px 20px; font-weight: 800; font-size: 14px; cursor: pointer;
+  box-shadow: 0 6px 20px rgba(29, 78, 216, 0.4);
+}
+.chat-fab:hover { transform: translateY(-1px); }
+.chat-panel {
+  position: fixed; right: 18px; bottom: 70px; z-index: 50; width: 340px; max-width: calc(100vw - 36px);
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18); display: flex; flex-direction: column;
+}
+.chat-head { background: #0a1128; color: #fff; font-weight: 800; font-size: 13px; letter-spacing: 1px; padding: 10px 14px; }
+.chat-head span { color: #8ea2c8; font-weight: 400; font-size: 11px; margin-left: 6px; }
+.chat-box { padding: 10px 12px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.chat-msg { font-size: 13px; line-height: 1.45; padding: 8px 11px; border-radius: 10px; max-width: 90%; }
+.chat-msg.bot { background: #f1f5f9; color: #0f172a; align-self: flex-start; }
+.chat-msg.you { background: linear-gradient(135deg, #1d4ed8, #2563eb); color: #fff; align-self: flex-end; }
+.chat-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 8px; }
+.chat-chips button { font-size: 11px; padding: 5px 9px; border-radius: 999px; border: 1px solid #93c5fd; background: #eff6ff; color: #1d4ed8; cursor: pointer; font-weight: 600; }
+.chat-input { display: flex; gap: 6px; padding: 0 12px 12px; }
+.chat-input input { flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px; font-size: 13px; }
+.chat-input button { background: #0a1128; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
 @media (max-width: 1000px) {
   .grid { grid-template-columns: 1fr; }
   .span-wide { grid-column: span 1; }

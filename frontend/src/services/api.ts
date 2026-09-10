@@ -100,6 +100,16 @@ export function wsUrl(path: string): string {
   return `${proto}://${window.location.host}${path}`;
 }
 
+export async function askAssistant(question: string): Promise<{ answer: string; context: Record<string, unknown> }> {
+  const r = await fetch(api('/api/assistant/ask'), {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ question }),
+  });
+  if (!r.ok) throw new Error(`assistant ${r.status}`);
+  return r.json();
+}
+
 export function bankUrl(): string {
   return `${API_BASE}/bank`;
 }

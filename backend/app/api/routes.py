@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
 
 from app.config import get_settings
 from app.audio.preprocessor import chunk_audio, decode_input, preprocess_audio
@@ -177,6 +178,17 @@ def webrtc_config() -> dict:
     from app.audio.webrtc import WEBRTC_SETUP
 
     return dict(WEBRTC_SETUP)
+
+
+class AssistantAskRequest(BaseModel):
+    question: str = Field(..., min_length=1, max_length=500)
+
+
+@router.post("/assistant/ask")
+def assistant_ask(req: AssistantAskRequest) -> dict:
+    from app.assistant.engine import answer
+
+    return answer(req.question)
 
 
 @router.get("/model/status")

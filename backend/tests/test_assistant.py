@@ -1,0 +1,32 @@
+"""Assistant endpoint tests (grounded, no weights needed)."""
+from __future__ import annotations
+
+
+def test_assistant_answers_without_audio(client):
+    r = client.post("/api/assistant/ask", json={"question": "What is my current risk?"})
+    assert r.status_code == 200
+    body = r.json()
+    assert "answer" in body and "context" in body
+    assert "No audio" in body["answer"]
+
+
+def test_assistant_model_question(client):
+    body = client.post("/api/assistant/ask", json={"question": "Which model is running?"}).json()
+    assert "DemoVoiceDetector" in body["answer"] or "AASIST" in body["answer"]
+
+
+def test_assistant_howto_and_thresholds(client):
+    assert "Synthetic" in client.post("/api/assistant/ask", json={"question": "How do I run the demo?"}).json()["answer"]
+    assert "60%" in client.post("/api/assistant/ask", json={"question": "What are the thresholds?"}).json()["answer"]
+
+
+def test_assistant_rejects_empty(client):
+    assert client.post("/api/assistant/ask", json={"question": ""}).status_code == 422
+
+
+def test_assistant_reflects_live_risk(client, genuine_audio):
+    audio, sr = genuine_audio
+    client.post("/api/analyze", json={"samples": [float(x) for x in audio[: sr * 3]], "sample_rate": sr})
+    body = client.post("/api/assistant/ask", json={"question": "status please"}).json()
+    assert "%" in body["answer"]
+    assert body["context"]["alert_level"] in ("GREEN", "YELLOW", "ORANGE", "RED")

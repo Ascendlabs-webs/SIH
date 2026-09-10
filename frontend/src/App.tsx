@@ -4,6 +4,7 @@ import { useVAuthWS } from './hooks/useVAuth';
 import { useMic } from './hooks/useMic';
 import { RiskGauge } from './components/RiskGauge';
 import { RiskTimeline } from './components/RiskTimeline';
+import { Assistant } from './components/Assistant';
 import { EventTimeline, SignalAnalysis, TechMetrics } from './components/Panels';
 import { levelColor } from './components/helpers';
 import type { AnalysisResult, CallContext, ModelStatus, ProtectionSnapshot, StatusResponse } from './types';
@@ -346,6 +347,7 @@ export default function App() {
       <footer className="foot">
         VAuth MVP · privacy: raw audio is never stored (STORE_RAW_AUDIO=false) · authorized streams only — uploads, mic, WebRTC, Twilio Media Streams. Cannot intercept ordinary cellular calls.
       </footer>
+      <Assistant />
     </div>
   );
 }
