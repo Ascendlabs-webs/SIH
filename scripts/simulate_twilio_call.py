@@ -34,6 +34,8 @@ async def main() -> None:
     ap.add_argument('--file', required=True)
     ap.add_argument('--url', default='ws://127.0.0.1:8000/ws/twilio')
     ap.add_argument('--frame-ms', type=float, default=20.0)
+    ap.add_argument('--realtime', action='store_true',
+                    help='pace frames like a live call (one frame every --frame-ms)')
     args = ap.parse_args()
 
     from app.audio.codecs import encode_mulaw_8k
@@ -52,9 +54,16 @@ async def main() -> None:
         await ws.send(json.dumps({"event": "connected", "protocol": "Call", "version": "1.0"}))
         print('server:', await ws.recv())
         results = 0
+        t_next = asyncio.get_event_loop().time()
         for fr in frames:
             await ws.send(json.dumps({"event": "media", "streamSid": "DEMO",
                                       "media": {"payload": base64.b64encode(fr).decode()}}))
+            if args.realtime:
+                # mimic a live call: one frame every frame-ms milliseconds
+                t_next += args.frame_ms / 1000.0
+                delay = t_next - asyncio.get_event_loop().time()
+                if delay > 0:
+                    await asyncio.sleep(delay)
             # drain any completed windows without blocking
             while True:
                 try:
