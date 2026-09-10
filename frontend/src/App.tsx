@@ -261,7 +261,6 @@ export default function App() {
             <div><span>Confidence</span><strong>{last ? `${Math.round(last.confidence * 100)}%` : '—'}</strong></div>
           </div>
           <div className="controls">
-            <button disabled={busy} onClick={() => void playDemo('real')} className="btn genuine">{busy ? '⏳ Analyzing…' : '▶ Start Genuine Voice Demo'}</button>
             <button disabled={busy} onClick={() => void playDemo('synthetic')} className="btn synth">{busy ? '⏳ Analyzing…' : '▶ Start Synthetic Voice Demo'}</button>
             <button disabled={busy} onClick={() => void playDemo('real_speech')} className="btn genuine">{busy ? '⏳ Analyzing…' : '▶ Start Real Speech Demo'}</button>
             <button onClick={() => void toggleMic()} className="btn ghost">{mic.active && !twilioLive ? '■ Stop Microphone' : '◉ Use Microphone (Live)'}</button>
