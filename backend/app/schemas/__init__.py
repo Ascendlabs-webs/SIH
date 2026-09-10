@@ -19,7 +19,7 @@ class CallContext(BaseModel):
     caller_known: bool = False
     pending_transaction: bool = False
     sensitive_action: bool = False
-    call_type: Literal["webrtc", "twilio", "upload", "demo", "mic"] = "demo"
+    call_type: Literal["webrtc", "twilio", "vonage", "upload", "demo", "mic"] = "demo"
 
 
 class AnalyzeRequest(BaseModel):

@@ -66,6 +66,16 @@ class Settings(BaseModel):
     twilio_auth_token: str = _getenv("TWILIO_AUTH_TOKEN", "")
     twilio_phone_number: str = _getenv("TWILIO_PHONE_NUMBER", "")
 
+    # Vonage Voice API (optional input adapter; disabled by default).
+    # Never required for local/demo usage; missing config never breaks startup.
+    vonage_enabled: bool = _getenv_bool("VONAGE_ENABLED", False)
+    vonage_public_ws_host: str = _getenv("VONAGE_PUBLIC_WS_HOST", "")
+    vonage_application_id: str = _getenv("VONAGE_APPLICATION_ID", "")
+    vonage_private_key_path: str = _getenv("VONAGE_PRIVATE_KEY_PATH", "")
+    vonage_number: str = _getenv("VONAGE_NUMBER", "")
+    vonage_verify_jwt: bool = _getenv_bool("VONAGE_VERIFY_JWT", True)
+    vonage_ws_auth_token: str = _getenv("VONAGE_WS_AUTH_TOKEN", "")
+
     # History
     history_limit: int = _getenv_int("VAUTH_HISTORY_LIMIT", 200)
 

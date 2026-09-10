@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { analyzeFile, bankUrl, fetchStatus, getModelStatus, getProtection, protectionAction, resetDemo, startDemo } from './services/api';
+import { analyzeFile, bankUrl, fetchStatus, getModelStatus, getProtection, getVonageStatus, protectionAction, resetDemo, startDemo } from './services/api';
 import { useVAuthWS } from './hooks/useVAuth';
 import { useMic } from './hooks/useMic';
 import { RiskGauge } from './components/RiskGauge';
@@ -8,6 +8,7 @@ import { Assistant } from './components/Assistant';
 import { EventTimeline, SignalAnalysis, TechMetrics } from './components/Panels';
 import { levelColor } from './components/helpers';
 import type { AnalysisResult, CallContext, ModelStatus, ProtectionSnapshot, StatusResponse } from './types';
+import type { VonageStatus } from './services/api';
 import './index.css';
 
 const DEFAULT_CTX: CallContext = {
@@ -25,6 +26,7 @@ export default function App() {
   const [notice, setNotice] = useState<string | null>(null);
   const [prot, setProt] = useState<ProtectionSnapshot | null>(null);
   const [model, setModel] = useState<ModelStatus | null>(null);
+  const [vonage, setVonage] = useState<VonageStatus | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -57,10 +59,12 @@ export default function App() {
   useEffect(() => {
     fetchStatus().then(setStatus).catch(() => setStatus(null));
     getModelStatus().then(setModel).catch(() => setModel(null));
+    getVonageStatus().then(setVonage).catch(() => undefined);
     refreshProtection();
     const id = setInterval(() => {
       fetchStatus().then(setStatus).catch(() => undefined);
       getModelStatus().then(setModel).catch(() => undefined);
+      getVonageStatus().then(setVonage).catch(() => undefined);
       refreshProtection();
     }, 5000);
     return () => clearInterval(id);
@@ -319,6 +323,7 @@ export default function App() {
                 <option value="demo">Demo</option>
                 <option value="webrtc">WebRTC</option>
                 <option value="twilio">Twilio</option>
+                <option value="vonage">Vonage</option>
                 <option value="upload">Upload</option>
                 <option value="mic">Mic</option>
               </select>
@@ -329,6 +334,9 @@ export default function App() {
           </div>
           <div className="sysline">
             backend {status ? `${status.detector.toUpperCase()} · ${status.window_seconds}s windows · history ${status.history_count}` : '…'}
+          </div>
+          <div className="sysline">
+            Vonage: {vonage == null ? '…' : vonage.configured ? 'CONFIGURED' : vonage.enabled ? 'ENABLED (host missing)' : 'DISABLED'}
           </div>
         </section>
 
@@ -341,7 +349,7 @@ export default function App() {
       <footer className="foot">
         VAuth MVP · privacy: raw audio is never stored (STORE_RAW_AUDIO=false) · authorized streams only — uploads, mic, WebRTC, Twilio Media Streams. Cannot intercept ordinary cellular calls.
       </footer>
-      <Assistant />
+      <Assistant last={last} />
     </div>
   );
 }

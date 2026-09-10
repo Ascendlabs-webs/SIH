@@ -37,3 +37,12 @@ def test_assistant_reflects_live_risk(client, genuine_audio):
     body = client.post("/api/assistant/ask", json={"question": "status please"}).json()
     assert "%" in body["answer"]
     assert body["context"]["alert_level"] in ("GREEN", "YELLOW", "ORANGE", "RED")
+
+
+def test_assistant_prefers_caller_dashboard_state(client):
+    body = client.post("/api/assistant/ask", json={
+        "question": "What is my current risk?",
+        "client_state": {"risk_score": 0.11, "alert_level": "GREEN", "classification": "REAL"},
+    }).json()
+    assert "11%" in body["answer"]
+    assert "GREEN" in body["answer"]

@@ -33,7 +33,7 @@ export function RiskTimeline({ data }: { data: AnalysisResult[] }) {
             </defs>
             <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="i" stroke="#64748b" tick={{ fontSize: 11 }} tickLine={false} axisLine={{ stroke: '#e2e8f0' }} label={{ value: 'window', fill: '#64748b', fontSize: 11, position: 'insideBottomRight' }} />
-            <YAxis domain={[0, 1]} stroke="#64748b" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={34} />
+            <YAxis domain={[0, 1]} stroke="#64748b" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={40} tickFormatter={(v: number) => v.toFixed(2)} />
             <Tooltip
               contentStyle={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 8, color: '#0f172a', fontSize: 12, boxShadow: '0 4px 14px rgba(15,23,42,0.12)' }}
               labelFormatter={(v) => `window ${v}`}

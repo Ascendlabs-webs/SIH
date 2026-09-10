@@ -4,6 +4,7 @@ from __future__ import annotations
 import base64
 import io
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 import numpy as np
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -182,13 +183,17 @@ def webrtc_config() -> dict:
 
 class AssistantAskRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=500)
+    # Optional caller-side reading (risk/alert from the asker's own dashboard).
+    # When present it takes precedence over global history, which may contain
+    # windows from other sessions.
+    client_state: Optional[Dict[str, Any]] = None
 
 
 @router.post("/assistant/ask")
 def assistant_ask(req: AssistantAskRequest) -> dict:
     from app.assistant.engine import answer
 
-    return answer(req.question)
+    return answer(req.question, req.client_state)
 
 
 @router.get("/model/status")

@@ -53,7 +53,7 @@ export interface CallContext {
   caller_known: boolean;
   pending_transaction: boolean;
   sensitive_action: boolean;
-  call_type: 'webrtc' | 'twilio' | 'upload' | 'demo' | 'mic';
+  call_type: 'webrtc' | 'twilio' | 'vonage' | 'upload' | 'demo' | 'mic';
 }
 
 export interface ProtectionSnapshot {

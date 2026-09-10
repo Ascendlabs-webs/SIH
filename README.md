@@ -161,6 +161,60 @@ always show which one is REALLY running (`MODEL:` / `MODE: DEMO|REAL ML`).
 3. Calls stream μ-law to `/ws/twilio` → same pipeline → dashboard.
 4. Local demo needs **no** Twilio credentials. Never routes ordinary cellular audio.
 
+## Vonage Voice Integration (optional input adapter, disabled by default)
+
+Architecture:
+
+```
+Phone
+  ↓
+Vonage Voice API
+  ↓
+POST /api/vonage/answer  →  NCCO (connect → wss://PUBLIC_HOST/ws/vonage, audio/l16;rate=16000)
+  ↓
+wss://PUBLIC_HOST/ws/vonage  (binary PCM16-16kHz frames + JSON events)
+  ↓
+Vonage adapter (NEW — input only, no analysis of its own)
+  ↓
+existing AnalysisPipeline → risk → protection → dashboard/bank/history
+```
+
+Each provider is only an input adapter (`/ws/audio` browser/WebRTC,
+`/ws/twilio` Twilio, `/ws/vonage` Vonage); the VAuth intelligence layer
+stays provider-agnostic. Twilio and browser paths are unchanged.
+
+Setup:
+
+1. Create a Vonage Voice Application (dashboard.vonage.com).
+2. Answer webhook: `POST https://<PUBLIC_HOST>/api/vonage/answer`.
+3. Event webhook (optional): `POST https://<PUBLIC_HOST>/api/vonage/event`.
+4. Associate a Vonage number with the application.
+5. Environment: `VONAGE_ENABLED=true`, `VONAGE_PUBLIC_WS_HOST=<PUBLIC_HOST>`
+   (no scheme), plus `VONAGE_WS_AUTH_TOKEN=<secret>` and put the same value
+   in the NCCO websocket `headers` as Vonage custom auth
+   (`{"authorization": "Bearer <secret>"}`); optional IDs
+   (`VONAGE_APPLICATION_ID`, `VONAGE_PRIVATE_KEY_PATH`, `VONAGE_NUMBER`).
+   `VONAGE_VERIFY_JWT=true` (default) refuses unauthenticated streams;
+   without a token configured it refuses everything rather than downgrading.
+6. Expose the backend over HTTPS/WSS (e.g. ngrok / Render).
+7. Start the backend, call the Vonage number, observe the dashboard.
+
+Local test without credentials/carrier:
+
+```powershell
+py scripts/simulate_vonage_call.py --file data/demo/demo_real_speech.wav
+py scripts/simulate_vonage_call.py --file data/demo/demo_synthetic_tts.wav --realtime
+```
+
+The Call Information card shows `Vonage: DISABLED/CONFIGURED`, and the call-type
+selector includes Vonage for manual context tagging.
+
+Clearly stated limits: Vonage is optional; the browser demo and Twilio path
+keep working unchanged; VAuth only analyzes explicitly routed/authorized
+audio and does not intercept ordinary cellular calls. Vonage adapter
+implemented and unit/integration tested locally; **real carrier call not
+verified in this environment**.
+
 ## WebRTC / microphone setup
 
 Dashboard mic button captures 16 kHz PCM via `AudioContext` → binary WS frames.

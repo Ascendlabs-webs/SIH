@@ -64,6 +64,23 @@ export async function getModelStatus(): Promise<ModelStatus> {
   return r.json();
 }
 
+export interface VonageStatus {
+  enabled: boolean;
+  configured: boolean;
+  stream_url: string;
+  audio_format: string;
+}
+
+export async function getVonageStatus(): Promise<VonageStatus | null> {
+  try {
+    const r = await fetch(api('/api/vonage/config'));
+    if (!r.ok) return null;
+    return r.json();
+  } catch {
+    return null;
+  }
+}
+
 export async function protectionAction(
   action: 'request_otp' | 'request_callback' | 'mark_verified' | 'escalate' | 'reset',
 ): Promise<ProtectionSnapshot> {
@@ -100,11 +117,14 @@ export function wsUrl(path: string): string {
   return `${proto}://${window.location.host}${path}`;
 }
 
-export async function askAssistant(question: string): Promise<{ answer: string; context: Record<string, unknown> }> {
+export async function askAssistant(
+  question: string,
+  clientState?: { risk_score: number; alert_level: string; classification: string } | null,
+): Promise<{ answer: string; context: Record<string, unknown> }> {
   const r = await fetch(api('/api/assistant/ask'), {
     method: 'POST',
     headers: JSON_HEADERS,
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, client_state: clientState ?? undefined }),
   });
   if (!r.ok) throw new Error(`assistant ${r.status}`);
   return r.json();

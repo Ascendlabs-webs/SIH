@@ -24,6 +24,7 @@ def _snapshot() -> dict:
         "alert": str(last.get("alert_level", "NONE")) if last else "NONE",
         "classification": str(last.get("classification", "—")) if last else "—",
         "has_result": bool(last),
+        "timestamp": str(last.get("timestamp", "")) if last else "",
         "protection": str(prot.get("state", "NORMAL")),
         "required": list(prot.get("required_actions", [])),
         "model": str(getattr(det, "model_name", getattr(det, "name", "demo"))),
@@ -36,7 +37,17 @@ def _pct(x: float) -> str:
     return f"{round(x * 100)}%"
 
 
-def answer(question: str) -> dict:
+def answer(question: str, client_state: dict | None = None) -> dict:
+    q = (question or "").lower()
+    s = _snapshot()
+    if client_state and isinstance(client_state.get("risk_score"), (int, float)):
+        # Prefer the caller's own dashboard reading: the global history may
+        # contain windows from other sessions, which would contradict the UI.
+        s = {**s,
+             "risk": float(client_state["risk_score"]),
+             "alert": str(client_state.get("alert_level", s["alert"])),
+             "classification": str(client_state.get("classification", s["classification"])),
+             "has_result": True}
     q = (question or "").lower()
     s = _snapshot()
     ctx = {"risk_score": s["risk"], "alert_level": s["alert"],
@@ -54,8 +65,10 @@ def answer(question: str) -> dict:
         else:
             text = (f"Current risk is {_pct(s['risk'])} ({s['alert']}, {s['classification']}). "
                     f"Protection state: {s['protection']}.")
-            if s["alert"] in ("ORANGE", "RED"):
+            if s["protection"] in ("SECONDARY_VERIFICATION_REQUIRED", "BLOCKED"):
                 text += " Treat the caller as unverified until a challenge succeeds."
+            elif s["alert"] in ("ORANGE", "RED"):
+                text += " Elevated but not holding: keep monitoring for more windows."
         return {"answer": text, "context": ctx}
 
     if has("how", "demo", "start", "use", "run", "help", "microphone", "upload", "twilio", "call"):

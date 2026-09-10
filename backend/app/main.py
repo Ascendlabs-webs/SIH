@@ -10,9 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router as api_router
 from app.api.twilio import router as twilio_router
+from app.api.vonage import router as vonage_router
 from app.config import get_settings
 from app.integrations.banking.routes import router as banking_router
 from app.websocket.audio_ws import router as ws_router
+from app.websocket.vonage_ws import router as vonage_ws_router
 
 settings = get_settings()
 log = logging.getLogger("vauth")
@@ -72,8 +74,10 @@ app.add_middleware(
 
 app.include_router(api_router, prefix="/api")
 app.include_router(twilio_router, prefix="/api")
+app.include_router(vonage_router, prefix="/api")
 app.include_router(banking_router, prefix="/api/banking")
 app.include_router(ws_router)
+app.include_router(vonage_ws_router)
 
 
 @app.get("/")
