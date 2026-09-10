@@ -38,11 +38,12 @@ export default function App() {
     getProtection().then(setProt).catch(() => undefined);
   };
 
+  const [twilioLive, setTwilioLive] = useState(false);
   const ctxForStream = useMemo<CallContext>(
-    () => ({ ...ctx, call_type: mode === 'LIVE' ? 'mic' : 'demo' }),
-    [ctx, mode],
+    () => ({ ...ctx, call_type: twilioLive ? 'twilio' : mode === 'LIVE' ? 'mic' : 'demo' }),
+    [ctx, mode, twilioLive],
   );
-  const { connected, results, lastError, sendPcm16, reset, pushResult } = useVAuthWS(ctxForStream);
+  const { connected, results, lastError, sendPcm16, reset, pushResult } = useVAuthWS(ctxForStream, { twilio: twilioLive });
   const recRef = useRef<Int16Array[] | null>(null);
   const [recording, setRecording] = useState(false);
   const [recSecs, setRecSecs] = useState(0);
@@ -143,11 +144,28 @@ export default function App() {
     if (mic.active) {
       stopRecording(false);
       mic.stop();
+      setTwilioLive(false);
       setMode('DEMO');
     } else {
       reset();
+      setTwilioLive(false);
       await mic.start();
       setMode('LIVE');
+    }
+  };
+
+  const toggleTwilioLive = async () => {
+    if (twilioLive) {
+      stopRecording(false);
+      mic.stop();
+      setTwilioLive(false);
+      setMode('DEMO');
+    } else {
+      reset();
+      setTwilioLive(true);
+      await mic.start();
+      setMode('LIVE');
+      setNotice('Your live microphone is now streaming through the /ws/twilio door as 8 kHz mu-law — identical framing to a real Twilio call.');
     }
   };
 
@@ -246,7 +264,8 @@ export default function App() {
             <button disabled={busy} onClick={() => void playDemo('real')} className="btn genuine">{busy ? '⏳ Analyzing…' : '▶ Start Genuine Voice Demo'}</button>
             <button disabled={busy} onClick={() => void playDemo('synthetic')} className="btn synth">{busy ? '⏳ Analyzing…' : '▶ Start Synthetic Voice Demo'}</button>
             <button disabled={busy} onClick={() => void playDemo('real_speech')} className="btn genuine">{busy ? '⏳ Analyzing…' : '▶ Start Real Speech Demo'}</button>
-            <button onClick={() => void toggleMic()} className="btn ghost">{mic.active ? '■ Stop Microphone' : '◉ Use Microphone (Live)'}</button>
+            <button onClick={() => void toggleMic()} className="btn ghost">{mic.active && !twilioLive ? '■ Stop Microphone' : '◉ Use Microphone (Live)'}</button>
+            <button onClick={() => void toggleTwilioLive()} className="btn ghost">{twilioLive ? '■ Stop Twilio-path Live' : '◉ Live via Twilio path'}</button>
             <button onClick={() => void toggleRecord()} className="btn ghost">{recording ? `■ Stop & save (${recSecs}s)` : '● Record my voice'}</button>
             <label className="btn ghost file">
               ⤒ Upload WAV
