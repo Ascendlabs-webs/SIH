@@ -201,6 +201,15 @@ async def ws_twilio(ws: WebSocket):
                 except Exception:
                     continue
             elif event == "stop":
+                # Flush the trailing partial window (zero-padded, same as the
+                # REST chunker) so the end of the call is scored, not dropped.
+                win_len = int(settings.window_seconds * settings.target_sample_rate)
+                min_keep = int(min(1.0, settings.window_seconds / 2.0) * settings.target_sample_rate)
+                if len(pcm_buffer) >= min_keep:
+                    window = np.pad(pcm_buffer[:win_len],
+                                    (0, max(0, win_len - len(pcm_buffer))))[:win_len].astype(np.float32)
+                    result = pipeline.process_window(window, settings.target_sample_rate, context)
+                    await ws.send_json({"type": "analysis_result", **result.model_dump()})
                 break
     except WebSocketDisconnect:
         return

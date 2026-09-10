@@ -61,6 +61,33 @@ def test_twilio_ws_mulaw_to_result(client):
 
 
 @requires_model
+def test_twilio_stop_flushes_trailing_window(client):
+    """Hang-up flushes a >=1.0 s trailing partial window (padded), so no
+    call audio is silently dropped."""
+    import numpy as np
+
+    from app.audio.codecs import encode_mulaw_8k
+
+    sr = 8000
+    t = np.arange(int(sr * 3.6)) / sr
+    tone = (0.4 * np.sin(2 * np.pi * 200 * t)).astype(np.float32)
+    wire = encode_mulaw_8k(tone)
+    frames = [wire[i:i + 160] for i in range(0, len(wire), 160)]
+
+    with client.websocket_connect("/ws/twilio") as ws:
+        ws.send_json({"event": "connected"})
+        assert ws.receive_json()["type"] == "ready"
+        for fr in frames:
+            ws.send_json({"event": "media",
+                          "media": {"payload": base64.b64encode(fr).decode()}})
+        full = ws.receive_json()
+        assert full["type"] == "analysis_result", full
+        ws.send_json({"event": "stop"})
+        flushed = ws.receive_json()
+        assert flushed["type"] == "analysis_result", flushed
+        assert flushed["window_duration"] > 2.0
+
+
 def test_ml_mode_loads_real_detector():
     """With the real checkpoint present, ml mode loads AASIST (no fallback)."""
     from pathlib import Path
