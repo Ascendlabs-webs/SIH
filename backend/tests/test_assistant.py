@@ -3,6 +3,7 @@ from __future__ import annotations
 
 
 def test_assistant_answers_without_audio(client):
+    client.post("/api/demo/reset")  # hermetic: fresh session, empty history
     r = client.post("/api/assistant/ask", json={"question": "What is my current risk?"})
     assert r.status_code == 200
     body = r.json()
