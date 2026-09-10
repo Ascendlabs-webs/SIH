@@ -165,7 +165,7 @@ export default function App() {
       setTwilioLive(true);
       await mic.start();
       setMode('LIVE');
-      setNotice('Your live microphone is now streaming through the /ws/twilio door as 8 kHz mu-law — identical framing to a real Twilio call.');
+      setNotice('Simulated incoming call: your microphone is the caller. Speak and watch VAuth score the call live, exactly as it would score a Twilio phone stream.');
     }
   };
 
@@ -264,7 +264,7 @@ export default function App() {
             <button disabled={busy} onClick={() => void playDemo('synthetic')} className="btn synth">{busy ? '⏳ Analyzing…' : '▶ Start Synthetic Voice Demo'}</button>
             <button disabled={busy} onClick={() => void playDemo('real_speech')} className="btn genuine">{busy ? '⏳ Analyzing…' : '▶ Start Real Speech Demo'}</button>
             <button onClick={() => void toggleMic()} className="btn ghost">{mic.active && !twilioLive ? '■ Stop Microphone' : '◉ Use Microphone (Live)'}</button>
-            <button onClick={() => void toggleTwilioLive()} className="btn ghost">{twilioLive ? '■ Stop Twilio-path Live' : '◉ Live via Twilio path'}</button>
+            <button onClick={() => void toggleTwilioLive()} className="btn ghost">{twilioLive ? '■ End Simulated Call' : '◉ Simulate Live Call'}</button>
             <button onClick={() => void toggleRecord()} className="btn ghost">{recording ? `■ Stop & save (${recSecs}s)` : '● Record my voice'}</button>
             <label className="btn ghost file">
               ⤒ Upload WAV
