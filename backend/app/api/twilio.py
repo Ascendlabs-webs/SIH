@@ -16,7 +16,7 @@ explicitly routes via Twilio Media Streams.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import Response
 
 from app.config import get_settings
@@ -24,10 +24,19 @@ from app.config import get_settings
 router = APIRouter()
 
 
+def _public_ws_host(request: Request) -> str:
+    """wss host for Media Streams: explicit env wins, else the request host."""
+    import os
+
+    override = os.environ.get("VAUTH_PUBLIC_WS_HOST", "").strip()
+    if override:
+        return override.replace("https://", "").replace("http://", "").rstrip("/")
+    return request.url.hostname or "YOUR_PUBLIC_HOST"
+
+
 @router.post("/twilio/voice")
-def twilio_voice() -> Response:
-    s = get_settings()
-    host = "YOUR_PUBLIC_HOST"
+def twilio_voice(request: Request) -> Response:
+    host = _public_ws_host(request)
     twiml = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         "<Response>"
