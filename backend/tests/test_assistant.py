@@ -24,6 +24,13 @@ def test_assistant_rejects_empty(client):
     assert client.post("/api/assistant/ask", json={"question": ""}).status_code == 422
 
 
+def test_assistant_why_explains(client, genuine_audio):
+    audio, sr = genuine_audio
+    client.post("/api/analyze", json={"samples": [float(x) for x in audio[: sr * 3]], "sample_rate": sr})
+    body = client.post("/api/assistant/ask", json={"question": "why it's not risky?"}).json()
+    assert "60%" in body["answer"] or "low" in body["answer"].lower()
+
+
 def test_assistant_reflects_live_risk(client, genuine_audio):
     audio, sr = genuine_audio
     client.post("/api/analyze", json={"samples": [float(x) for x in audio[: sr * 3]], "sample_rate": sr})

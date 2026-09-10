@@ -98,6 +98,24 @@ def answer(question: str) -> dict:
                 "OTP/callback/supervisor challenge passes. Simulated money only.")
         return {"answer": text, "context": ctx}
 
+    if has("why", "explain", "explanation", "reason", "cause", "how come"):
+        if not s["has_result"]:
+            text = ("Nothing has been scored yet, so there is no risk to explain. "
+                    "Run any demo and ask me again.")
+        elif s["alert"] == "GREEN":
+            text = (f"Risk is low ({_pct(s['risk'])}) because the analyzed windows scored "
+                    f"below the 60% YELLOW line — the voice looks genuine ({s['classification']}). "
+                    f"Protection stays {s['protection']}. It would turn risky if several "
+                    f"windows in a row scored synthetic-looking (flat robotic traits) and "
+                    f"pushed the rolling average past 60%, 75%, 90%.")
+        else:
+            text = (f"Risk is elevated ({_pct(s['risk'])}, {s['alert']}) because recent "
+                    f"windows scored synthetic-looking, lifting the rolling average past "
+                    f"the alert thresholds. Context added "
+                    f"{s['protection']} state: {s['protection']}. "
+                    f"Complete secondary verification to clear it.")
+        return {"answer": text, "context": ctx}
+
     if has("threshold", "green", "yellow", "red", "orange", "level"):
         text = ("Risk bands: GREEN below 60%, YELLOW 60–75%, ORANGE 75–90%, RED above "
                 "90% (configurable via VAUTH_GREEN_T / VAUTH_YELLOW_T / VAUTH_ORANGE_T).")
