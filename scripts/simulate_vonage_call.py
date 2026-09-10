@@ -73,6 +73,21 @@ async def main() -> None:
                     print('window %d: risk=%.4f level=%s class=%s' % (
                         results, body['risk_score'], body['alert_level'],
                         body['classification']))
+        # final drain: inference (esp. large models) lags behind the burst
+        try:
+            while True:
+                try:
+                    msg = await asyncio.wait_for(ws.recv(), timeout=30.0)
+                except asyncio.TimeoutError:
+                    break
+                body = json.loads(msg)
+                if body.get('type') == 'analysis_result':
+                    results += 1
+                    print('window %d: risk=%.4f level=%s class=%s' % (
+                        results, body['risk_score'], body['alert_level'],
+                        body['classification']))
+        except Exception:
+            pass
         print(f'done: {results} analysis windows via SIMULATED Vonage stream '
               f'(sub-window tail is dropped on disconnect, same as mic path)')
 

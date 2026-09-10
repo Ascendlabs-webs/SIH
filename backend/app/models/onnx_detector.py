@@ -62,10 +62,16 @@ class OnnxLogitDetector(BaseVoiceDetector):
                 f"(resolved: '{self.model_path}')."
             )
         try:
+            from app.models import cache as _cache
+
             opts = ort.SessionOptions()
-            self.session = ort.InferenceSession(
-                str(self.model_path), sess_options=opts,
-                providers=["CPUExecutionProvider"])
+
+            def _load():
+                return ort.InferenceSession(
+                    str(self.model_path), sess_options=opts,
+                    providers=["CPUExecutionProvider"])
+
+            self.session = _cache.shared(f"onnx:{self.model_path}", _load)
             self.input_name = self.session.get_inputs()[0].name
             self.output_name = self.session.get_outputs()[0].name
         except Exception as exc:

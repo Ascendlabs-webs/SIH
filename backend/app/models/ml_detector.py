@@ -92,7 +92,6 @@ class MLVoiceDetector(BaseVoiceDetector):
     def __init__(self, model_path: str | None = None, device: str | None = None):
         if not _TORCH:
             raise ModelNotAvailableError("PyTorch is not installed; cannot use MLVoiceDetector")
-        from app.models.aasist_net import Model as AASISTNet
 
         self.requested_path = model_path or os.environ.get("VAUTH_MODEL_PATH", DEFAULT_MODEL_PATH)
         self.model_path = resolve_model_path(self.requested_path)
@@ -110,21 +109,32 @@ class MLVoiceDetector(BaseVoiceDetector):
                 raise ModelNotAvailableError("VAUTH_DEVICE=cuda requested but CUDA is not available")
             self.device = torch.device("cpu")
         try:
-            self.model = AASISTNet(AASIST_D_ARGS)
-            state = torch.load(str(self.model_path), map_location="cpu")
-            if isinstance(state, dict) and "state_dict" in state:
-                state = state["state_dict"]
-            if isinstance(state, dict) and "model" in state and isinstance(state["model"], dict):
-                state = state["model"]
-            # Strict: any architecture mismatch must fail loudly, never silently.
-            self.model.load_state_dict(state, strict=True)
+            from app.models import cache as _cache
+
+            def _load():
+                from app.models.aasist_net import Model as AASISTNet
+
+                net = AASISTNet(AASIST_D_ARGS)
+                state = torch.load(str(self.model_path), map_location="cpu")
+                if isinstance(state, dict) and "state_dict" in state:
+                    state = state["state_dict"]
+                if isinstance(state, dict) and "model" in state and isinstance(state["model"], dict):
+                    state = state["model"]
+                # Strict: any architecture mismatch must fail loudly, never silently.
+                net.load_state_dict(state, strict=True)
+                net.to(self.device).eval()
+                return net
+
+            self.model = _cache.shared(f"aasist:{self.model_path}", _load)
+            if next(self.model.parameters()).device != self.device:
+                # Cached on another device (e.g. tests); keep this instance CPU-safe.
+                self.model.to(self.device).eval()
         except ModelNotAvailableError:
             raise
         except Exception as exc:
             raise ModelNotAvailableError(
                 f"Could not load AASIST checkpoint '{self.model_path}': {exc}"
             ) from exc
-        self.model.to(self.device).eval()
         self.num_params = int(sum(p.numel() for p in self.model.parameters()))
         self.loaded = True
 
