@@ -27,8 +27,8 @@ export function RiskTimeline({ data }: { data: AnalysisResult[] }) {
           <AreaChart data={pts} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
             <defs>
               <linearGradient id="riskFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0284c9" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#0284c9" stopOpacity={0.03} />
+                <stop offset="0%" stopColor="#1d4ed8" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#16a34a" stopOpacity={0.05} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
@@ -41,7 +41,7 @@ export function RiskTimeline({ data }: { data: AnalysisResult[] }) {
             <ReferenceLine y={0.6} stroke="#eab308" strokeDasharray="4 4" strokeWidth={1.5} />
             <ReferenceLine y={0.75} stroke="#f97316" strokeDasharray="4 4" strokeWidth={1.5} />
             <ReferenceLine y={0.9} stroke="#ef4444" strokeDasharray="4 4" strokeWidth={1.5} />
-            <Area type="monotone" dataKey="risk" stroke="#0284c9" strokeWidth={2.5} fill="url(#riskFill)" dot={{ r: 3, fill: '#0284c9', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
+            <Area type="monotone" dataKey="risk" stroke="#1d4ed8" strokeWidth={2.5} fill="url(#riskFill)" dot={{ r: 3, fill: '#1d4ed8', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       )}

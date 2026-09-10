@@ -225,7 +225,7 @@ export default function App() {
     <div className="shell">
       <header className="topbar">
         <div className="brand">
-          <span className="logo">◉</span>
+          <img src="/logo.svg" className="logo-img" alt="VAuth logo" />
           <div>
             <div className="brand-name">VAuth</div>
             <div className="brand-sub">REAL-TIME VOICE AUTHENTICITY</div>
