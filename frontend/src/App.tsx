@@ -246,12 +246,6 @@ export default function App() {
         <div className="warn-banner">⚠ {model.warning}</div>
       )}
 
-      <div className="demo-banner">
-        {model && !model.is_demo
-          ? `REAL ML INFERENCE — ${model.model_name} (${model.device}) · research benchmark, not production validation`
-          : 'DEMO MODEL — Replace with trained anti-spoof model for production evaluation · defensive use only (uploads, mic, WebRTC, Twilio Media Streams)'}
-      </div>
-
       <main className="grid">
         <section className="card span-main">
           <div className="card-title">Current Risk</div>
