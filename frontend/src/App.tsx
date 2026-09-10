@@ -43,7 +43,14 @@ export default function App() {
     [ctx, mode],
   );
   const { connected, results, lastError, sendPcm16, reset, pushResult } = useVAuthWS(ctxForStream);
-  const mic = useMic(sendPcm16);
+  const recRef = useRef<Int16Array[] | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [recSecs, setRecSecs] = useState(0);
+  const onMicChunk = (pcm: Int16Array, sr: number) => {
+    sendPcm16(pcm, sr);
+    if (recRef.current) recRef.current.push(new Int16Array(pcm));
+  };
+  const mic = useMic(onMicChunk);
 
   useEffect(() => {
     fetchStatus().then(setStatus).catch(() => setStatus(null));
@@ -134,6 +141,7 @@ export default function App() {
 
   const toggleMic = async () => {
     if (mic.active) {
+      stopRecording(false);
       mic.stop();
       setMode('DEMO');
     } else {
@@ -141,6 +149,54 @@ export default function App() {
       await mic.start();
       setMode('LIVE');
     }
+  };
+
+  const downloadWav = (chunks: Int16Array[]) => {
+    const total = chunks.reduce((n, c) => n + c.length, 0);
+    const data = new Int16Array(total);
+    let off = 0;
+    for (const c of chunks) { data.set(c, off); off += c.length; }
+    const buf = new ArrayBuffer(44 + data.length * 2);
+    const v = new DataView(buf);
+    const wstr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    wstr(0, 'RIFF'); v.setUint32(4, 36 + data.length * 2, true); wstr(8, 'WAVE');
+    wstr(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+    v.setUint16(22, 1, true); v.setUint32(24, 16000, true); v.setUint32(28, 32000, true);
+    v.setUint16(32, 2, true); v.setUint16(34, 16, true); wstr(36, 'data');
+    v.setUint32(40, data.length * 2, true);
+    new Int16Array(buf, 44).set(data);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+    a.download = 'my-voice.wav';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+
+  const stopRecording = (download: boolean) => {
+    if (!recording) return;
+    const chunks = recRef.current ?? [];
+    recRef.current = null;
+    setRecording(false);
+    if (download && chunks.length) {
+      downloadWav(chunks);
+      setNotice('Saved my-voice.wav — feed it to scripts/simulate_twilio_call.py --file my-voice.wav to run YOUR voice through the Twilio path.');
+    }
+  };
+
+  const toggleRecord = async () => {
+    if (recording) { stopRecording(true); return; }
+    if (!mic.active) { reset(); await mic.start(); setMode('LIVE'); }
+    recRef.current = [];
+    setRecSecs(0);
+    setRecording(true);
+    setNotice('Recording your microphone… speak for ~10 s, then stop. It also streams live to the analyzer.');
+    const started = Date.now();
+    const tickRec = setInterval(() => {
+      const s = Math.round((Date.now() - started) / 1000);
+      setRecSecs(s);
+      if (s >= 15) { clearInterval(tickRec); stopRecording(true); }
+    }, 500);
+    timers.current.push(tickRec);
   };
 
   const protState = prot?.state ?? last?.protection_state ?? 'NORMAL';
@@ -191,6 +247,7 @@ export default function App() {
             <button disabled={busy} onClick={() => void playDemo('synthetic')} className="btn synth">{busy ? '⏳ Analyzing…' : '▶ Start Synthetic Voice Demo'}</button>
             <button disabled={busy} onClick={() => void playDemo('real_speech')} className="btn genuine">{busy ? '⏳ Analyzing…' : '▶ Start Real Speech Demo'}</button>
             <button onClick={() => void toggleMic()} className="btn ghost">{mic.active ? '■ Stop Microphone' : '◉ Use Microphone (Live)'}</button>
+            <button onClick={() => void toggleRecord()} className="btn ghost">{recording ? `■ Stop & save (${recSecs}s)` : '● Record my voice'}</button>
             <label className="btn ghost file">
               ⤒ Upload WAV
               <input type="file" accept=".wav,audio/wav" hidden onChange={(e) => void onUpload(e.target.files?.[0])} />
