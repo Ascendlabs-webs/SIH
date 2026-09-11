@@ -55,7 +55,8 @@ def answer(question: str, client_state: dict | None = None) -> dict:
     def has(*words: str) -> bool:
         return any(re.search(rf"\b{w}s?\b", q) for w in words)
 
-    if has("risk", "score", "status", "result", "safe", "danger", "meter"):
+    if has("risk", "score", "status", "result", "safe", "danger", "meter") and (
+            s["has_result"] or has("my", "current", "status", "now", "live")):
         if not s["has_result"]:
             text = ("No audio has been analyzed yet in this session. Run Real Speech, "
                     "Synthetic, use the microphone, or upload a WAV — I will read the "
@@ -69,7 +70,7 @@ def answer(question: str, client_state: dict | None = None) -> dict:
                 text += " Elevated but not holding: keep monitoring for more windows."
         return {"answer": text, "context": ctx}
 
-    if has("how", "demo", "start", "use", "run", "help", "microphone", "upload", "twilio", "call"):
+    if has("how", "run", "demo", "start", "use", "help", "microphone", "upload", "call", "twilio") and not has("policy", "threshold", "model", "privacy"):
         text = ("Try: 1) Real Speech Demo (recorded human, should stay GREEN), "
                 "2) Synthetic Demo (attack sample, should go RED), "
                 "3) Simulate Live Call (your mic as the caller), "
@@ -102,7 +103,7 @@ def answer(question: str, client_state: dict | None = None) -> dict:
                      "anti-spoof model for real evaluation.")
         return {"answer": text, "context": ctx}
 
-    if has("bank", "transaction", "transfer", "money", "payment", "otp"):
+    if has("bank", "banking", "transaction", "transfer", "money", "payment", "otp"):
         text = ("Open the Demo Bank page (header link). Create the ₹5,00,000 transfer: "
                 "GREEN risk approves it; ORANGE/RED holds it as PENDING_VERIFICATION, "
                 "where direct Approve is rejected by the backend until a simulated "
@@ -146,4 +147,14 @@ def answer(question: str, client_state: dict | None = None) -> dict:
     text = ("I can answer about live risk, recommended actions, the active model, "
             "thresholds, privacy, the bank demo, or how to run things. "
             f"Right now: risk {_pct(s['risk'])} ({s['alert']}), protection {s['protection']}.")
+    # Fall back to the project knowledge base: real docs/code, cited.
+    try:
+        from app.assistant.kb import search as kb_search
+
+        hits = kb_search(question, top_k=2)
+    except Exception:
+        hits = []
+    if hits:
+        cited = "\n\n".join(f"[{h['path']}]\n{h['text'][:500]}" for h in hits)
+        text = f"From the project itself:\n\n{cited}"
     return {"answer": text, "context": ctx}

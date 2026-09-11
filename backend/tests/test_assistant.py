@@ -40,6 +40,16 @@ def test_assistant_reflects_live_risk(client, genuine_audio):
     assert body["context"]["alert_level"] in ("GREEN", "YELLOW", "ORANGE", "RED")
 
 
+def test_assistant_answers_project_question_from_kb(client):
+    client.post("/api/demo/reset")  # hermetic: KB fallback needs empty history
+    body = client.post("/api/assistant/ask", json={
+        "question": "What audio format does the Vonage adapter expect?"}).json()
+    assert "l16" in body["answer"].lower() or "pcm" in body["answer"].lower()
+    body = client.post("/api/assistant/ask", json={
+        "question": "How does the banking hold policy treat RED risk?"}).json()
+    assert "PENDING_VERIFICATION" in body["answer"]
+
+
 def test_assistant_prefers_caller_dashboard_state(client):
     body = client.post("/api/assistant/ask", json={
         "question": "What is my current risk?",
