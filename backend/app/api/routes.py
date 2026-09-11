@@ -75,7 +75,12 @@ def analyze(req: AnalyzeRequest) -> AnalysisResult:
     windows = chunk_audio(clean, s.target_sample_rate, s.window_seconds)
     if not windows:
         raise HTTPException(status_code=400, detail="Audio too short for one analysis window")
-    return get_pipeline().process_window(windows[0], s.target_sample_rate, req.context.model_dump())
+    # Fresh pipeline per upload: an uploaded file is an independent sample,
+    # so leftover rolling history from earlier sessions must not dilute it.
+    # (Result is still stored to global history.)
+    from app.services.pipeline import AnalysisPipeline
+
+    return AnalysisPipeline().process_window(windows[0], s.target_sample_rate, req.context.model_dump())
 
 
 @router.post("/analyze-file", response_model=AnalysisResult)
@@ -107,7 +112,9 @@ async def analyze_file(
         raise HTTPException(status_code=400, detail="Audio too short")
     ctx = {"caller_known": caller_known, "pending_transaction": pending_transaction,
            "sensitive_action": sensitive_action, "call_type": call_type}
-    return get_pipeline().process_window(windows[0], s.target_sample_rate, ctx)
+    from app.services.pipeline import AnalysisPipeline
+
+    return AnalysisPipeline().process_window(windows[0], s.target_sample_rate, ctx)
 
 
 @router.post("/demo/start", response_model=DemoStartResponse)
