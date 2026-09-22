@@ -6,6 +6,10 @@ import { RiskGauge } from './components/RiskGauge';
 import { RiskTimeline } from './components/RiskTimeline';
 import { Assistant } from './components/Assistant';
 import { EventTimeline, SignalAnalysis, TechMetrics } from './components/Panels';
+import { EmptyState } from './components/EmptyState';
+import { Skeleton } from './components/Skeleton';
+import ParticleBackground from './components/ParticleBackground';
+import { useToast } from './components/Toast';
 import { levelColor } from './components/helpers';
 import type { AnalysisResult, CallContext, ModelStatus, ProtectionSnapshot, StatusResponse } from './types';
 import type { VonageStatus } from './services/api';
@@ -27,8 +31,10 @@ export default function App() {
   const [prot, setProt] = useState<ProtectionSnapshot | null>(null);
   const [model, setModel] = useState<ModelStatus | null>(null);
   const [vonage, setVonage] = useState<VonageStatus | null>(null);
+  const [loading, setLoading] = useState(true);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const abortRef = useRef<AbortController | null>(null);
+  const { showToast } = useToast();
 
   const cancelInflight = () => {
     timers.current.forEach(clearTimeout);
@@ -57,9 +63,16 @@ export default function App() {
   const mic = useMic(onMicChunk);
 
   useEffect(() => {
-    fetchStatus().then(setStatus).catch(() => setStatus(null));
-    getModelStatus().then(setModel).catch(() => setModel(null));
-    getVonageStatus().then(setVonage).catch(() => undefined);
+    Promise.all([
+      fetchStatus().catch(() => null),
+      getModelStatus().catch(() => null),
+      getVonageStatus().catch(() => null),
+    ]).then(([s, m, v]) => {
+      setStatus(s);
+      setModel(m);
+      setVonage(v);
+      setLoading(false);
+    });
     refreshProtection();
     const id = setInterval(() => {
       fetchStatus().then(setStatus).catch(() => undefined);
@@ -76,6 +89,13 @@ export default function App() {
   const risk = last?.risk_score ?? 0;
   const level = last?.alert_level ?? 'GREEN';
   const color = levelColor(level);
+
+  // Show toast for high-risk events
+  useEffect(() => {
+    if (last && last.alert_level === 'RED') {
+      showToast('⚠ HIGH RISK: Synthetic voice detected!', 'error');
+    }
+  }, [last, showToast]);
 
   const playDemo = async (scenario: 'real' | 'synthetic' | 'real_speech') => {
     cancelInflight();
@@ -100,8 +120,9 @@ export default function App() {
       clearInterval(tick);
       clearTimeout(killer);
       setMode('DEMO');
-      setNotice(out.message + (slow ? ' Note: placeholder beeps are out-of-distribution for benchmark models — scores reflect the real model, not the demo script.' : ''));
-      // Replay windows progressively so the timeline/chart feel live.
+      const msg = out.message + (slow ? ' Note: placeholder beeps are out-of-distribution for benchmark models — scores reflect the real model, not the demo script.' : '');
+      setNotice(msg);
+      showToast(msg, 'info');
       out.results.forEach((r, i) => {
         timers.current.push(setTimeout(() => pushResult(r), 450 * (i + 1)));
       });
@@ -111,9 +132,10 @@ export default function App() {
         setNotice(ctrl.signal.aborted && Date.now() - t0 >= 180000
           ? 'Analysis timed out after 180 s — the CPU is overloaded. Press Reset and retry.'
           : null);
-        return; // superseded run
+        return;
       }
       setNotice(e instanceof Error ? e.message : 'Demo failed. Is the backend running? Did you generate demo audio?');
+      showToast(e instanceof Error ? e.message : 'Demo failed', 'error');
     } finally {
       if (abortRef.current === ctrl) abortRef.current = null;
       setBusy(false);
@@ -124,8 +146,10 @@ export default function App() {
     try {
       const snap = await protectionAction(action);
       setProt(snap);
+      showToast(`Protection action: ${action}`, 'success');
     } catch (e) {
       setNotice(e instanceof Error ? e.message : 'Protection action failed');
+      showToast('Protection action failed', 'error');
     }
   };
 
@@ -137,9 +161,12 @@ export default function App() {
       reset();
       const r = await analyzeFile(f, { ...ctx, call_type: 'upload' });
       pushResult(r);
-      setNotice(`Analysed ${f.name}: ${r.classification} @ ${Math.round(r.risk_score * 100)}% (${r.alert_level}).`);
+      const msg = `Analysed ${f.name}: ${r.classification} @ ${Math.round(r.risk_score * 100)}% (${r.alert_level}).`;
+      setNotice(msg);
+      showToast(msg, 'success');
     } catch (e) {
       setNotice(e instanceof Error ? e.message : 'Upload failed');
+      showToast(e instanceof Error ? e.message : 'Upload failed', 'error');
     } finally {
       setBusy(false);
     }
@@ -151,11 +178,13 @@ export default function App() {
       mic.stop();
       setTwilioLive(false);
       setMode('DEMO');
+      showToast('Microphone stopped', 'info');
     } else {
       reset();
       setTwilioLive(false);
       await mic.start();
       setMode('LIVE');
+      showToast('Microphone started — live analysis active', 'success');
     }
   };
 
@@ -165,12 +194,14 @@ export default function App() {
       mic.stop();
       setTwilioLive(false);
       setMode('DEMO');
+      showToast('Simulated call ended', 'info');
     } else {
       reset();
       setTwilioLive(true);
       await mic.start();
       setMode('LIVE');
       setNotice('Simulated incoming call: your microphone is the caller. Speak and watch VAuth score the call live, exactly as it would score a Twilio phone stream.');
+      showToast('Simulated incoming call started', 'warning');
     }
   };
 
@@ -202,6 +233,7 @@ export default function App() {
     setRecording(false);
     if (download && chunks.length) {
       downloadWav(chunks);
+      showToast('Saved my-voice.wav', 'success');
       setNotice('Saved my-voice.wav — feed it to scripts/simulate_twilio_call.py --file my-voice.wav to run YOUR voice through the Twilio path.');
     }
   };
@@ -212,6 +244,7 @@ export default function App() {
     recRef.current = [];
     setRecSecs(0);
     setRecording(true);
+    showToast('Recording started — speak for ~10s', 'info');
     setNotice('Recording your microphone… speak for ~10 s, then stop. It also streams live to the analyzer.');
     const started = Date.now();
     const tickRec = setInterval(() => {
@@ -222,12 +255,62 @@ export default function App() {
     timers.current.push(tickRec);
   };
 
+  // Chart export function
+  const exportChart = () => {
+    const svg = document.querySelector('.chart-box svg');
+    if (!svg) {
+      showToast('No chart to export yet', 'warning');
+      return;
+    }
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svg);
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'vauth-risk-timeline.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Chart exported as SVG', 'success');
+  };
+
   const protState = prot?.state ?? last?.protection_state ?? 'NORMAL';
   const verified = protState === 'VERIFIED';
   const blocked = protState === 'SECONDARY_VERIFICATION_REQUIRED' || protState === 'BLOCKED';
 
+  if (loading) {
+    return (
+      <div className="shell">
+        <div className="scanlines" />
+        <header className="topbar">
+          <div className="brand">
+            <div className="skeleton skeleton-circle" style={{ width: 42, height: 42 }} />
+            <div>
+              <div className="skeleton skeleton-title" style={{ width: 100, height: 20 }} />
+              <div className="skeleton skeleton-text" style={{ width: 150, height: 10 }} />
+            </div>
+          </div>
+          <div className="top-right">
+            <Skeleton variant="text" width={120} />
+            <Skeleton variant="text" width={100} />
+          </div>
+        </header>
+        <main className="grid">
+          <section className="card span-main"><Skeleton variant="card" /></section>
+          <section className="card"><Skeleton variant="card" /></section>
+          <section className="card span-wide"><Skeleton variant="chart" /></section>
+          <section className="card"><Skeleton variant="card" /></section>
+          <section className="card"><Skeleton variant="card" /></section>
+          <section className="card"><Skeleton variant="card" /></section>
+          <section className="card"><Skeleton variant="card" /></section>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="shell">
+      <ParticleBackground />
       <div className="scanlines" />
       <header className="topbar">
         <div className="brand">
@@ -261,16 +344,16 @@ export default function App() {
             <div><span>Confidence</span><strong>{last ? `${Math.round(last.confidence * 100)}%` : '—'}</strong></div>
           </div>
           <div className="controls">
-            <button disabled={busy} onClick={() => void playDemo('synthetic')} className="btn synth">{busy ? '⏳ Analyzing…' : '▶ Start Synthetic Voice Demo'}</button>
-            <button disabled={busy} onClick={() => void playDemo('real_speech')} className="btn genuine">{busy ? '⏳ Analyzing…' : '▶ Start Real Speech Demo'}</button>
-            <button onClick={() => void toggleMic()} className="btn ghost">{mic.active && !twilioLive ? '■ Stop Microphone' : '◉ Use Microphone (Live)'}</button>
-            <button onClick={() => void toggleTwilioLive()} className="btn ghost">{twilioLive ? '■ End Simulated Call' : '◉ Simulate Live Call'}</button>
-            <button onClick={() => void toggleRecord()} className="btn ghost">{recording ? `■ Stop & save (${recSecs}s)` : '● Record my voice'}</button>
-            <label className="btn ghost file">
+            <button disabled={busy} onClick={() => void playDemo('synthetic')} className="btn synth ripple">{busy ? '⏳ Analyzing…' : '▶ Start Synthetic Voice Demo'}</button>
+            <button disabled={busy} onClick={() => void playDemo('real_speech')} className="btn genuine ripple">{busy ? '⏳ Analyzing…' : '▶ Start Real Speech Demo'}</button>
+            <button onClick={() => void toggleMic()} className="btn ghost ripple">{mic.active && !twilioLive ? '■ Stop Microphone' : '◉ Use Microphone (Live)'}</button>
+            <button onClick={() => void toggleTwilioLive()} className="btn ghost ripple">{twilioLive ? '■ End Simulated Call' : '◉ Simulate Live Call'}</button>
+            <button onClick={() => void toggleRecord()} className={`btn ghost ripple ${recording ? 'recording-pulse' : ''}`}>{recording ? `■ Stop & save (${recSecs}s)` : '● Record my voice'}</button>
+            <label className="btn ghost file ripple">
               ⤒ Upload WAV
               <input type="file" accept=".wav,audio/wav" hidden onChange={(e) => void onUpload(e.target.files?.[0])} />
             </label>
-            <button onClick={() => { cancelInflight(); reset(); void resetDemo(); refreshProtection(); setNotice('Session cleared.'); }} className="btn ghost">Reset</button>
+            <button onClick={() => { cancelInflight(); reset(); void resetDemo(); refreshProtection(); setNotice('Session cleared.'); showToast('Session cleared', 'info'); }} className="btn ghost ripple">Reset</button>
           </div>
           {(notice || lastError || mic.error) && (
             <div className="notice">{notice ?? lastError ?? mic.error}</div>
@@ -279,41 +362,70 @@ export default function App() {
 
         <section className="card">
           <div className="card-title">Security Recommendation</div>
-          <p className="reco">{last?.recommendation ?? 'Awaiting audio — run a demo to see the full pipeline.'}</p>
-          <div className="protect">
-            <div className="card-title sm">Sensitive Action Protection <span className="hint">backend state: {protState}</span></div>
-            <div className="tx">Transaction Request: <strong>₹5,00,000</strong></div>
-            <div className={`tx-status ${blocked ? 'blocked' : 'ok'}`}>
-              Status: {last ? (verified ? 'VERIFIED — RELEASED' : blocked ? `${protState} — ACTION HELD` : protState === 'ESCALATED' ? 'ESCALATED TO SUPERVISOR' : level === 'GREEN' ? 'ALLOWED' : 'FLAGGED — REVIEW') : '—'}
-            </div>
-            {(prot?.required_actions ?? last?.protection_actions ?? []).length > 0 && !verified && (
-              <div className="req-actions">Required: {(prot?.required_actions ?? last?.protection_actions ?? []).join(' · ')}</div>
-            )}
-            {(prot?.pending_challenges ?? []).length > 0 && (
-              <div className="req-actions">Challenges sent: {prot!.pending_challenges.map((c) => c.channel).join(', ')} (simulated)</div>
-            )}
-            <div className="controls protect-btns">
-              <button className="btn warn" disabled={!last} onClick={() => void onProtect('request_otp')}>Request OTP</button>
-              <button className="btn warn" disabled={!last} onClick={() => void onProtect('request_callback')}>Request Callback</button>
-              <button className="btn warn" disabled={!last || verified} onClick={() => void onProtect('mark_verified')}>{verified ? '✓ Verified' : 'Mark Verified'}</button>
-              <button className="btn ghost" disabled={!last} onClick={() => void onProtect('escalate')}>Escalate</button>
-            </div>
-          </div>
+          {last ? (
+            <>
+              <p className="reco">{last.recommendation}</p>
+              <div className="protect">
+                <div className="card-title sm">Sensitive Action Protection <span className="hint">backend state: {protState}</span></div>
+                <div className="tx">Transaction Request: <strong>₹5,00,000</strong></div>
+                <div className={`tx-status ${blocked ? 'blocked' : 'ok'}`}>
+                  Status: {verified ? 'VERIFIED — RELEASED' : blocked ? `${protState} — ACTION HELD` : protState === 'ESCALATED' ? 'ESCALATED TO SUPERVISOR' : level === 'GREEN' ? 'ALLOWED' : 'FLAGGED — REVIEW'}
+                </div>
+                {(prot?.required_actions ?? last.protection_actions ?? []).length > 0 && !verified && (
+                  <div className="req-actions">Required: {(prot?.required_actions ?? last.protection_actions ?? []).join(' · ')}</div>
+                )}
+                {(prot?.pending_challenges ?? []).length > 0 && (
+                  <div className="req-actions">Challenges sent: {prot!.pending_challenges.map((c) => c.channel).join(', ')} (simulated)</div>
+                )}
+                <div className="controls protect-btns">
+                  <button className="btn warn ripple" disabled={!last} onClick={() => void onProtect('request_otp')}>Request OTP</button>
+                  <button className="btn warn ripple" disabled={!last} onClick={() => void onProtect('request_callback')}>Request Callback</button>
+                  <button className="btn warn ripple" disabled={!last || verified} onClick={() => void onProtect('mark_verified')}>{verified ? '✓ Verified' : 'Mark Verified'}</button>
+                  <button className="btn ghost ripple" disabled={!last} onClick={() => void onProtect('escalate')}>Escalate</button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <EmptyState
+              icon="🛡️"
+              title="No analysis yet"
+              message="Run a demo or upload audio to see protection recommendations"
+              action={{ label: 'Start Demo', onClick: () => playDemo('real_speech') }}
+            />
+          )}
         </section>
 
         <section className="card span-wide">
-          <div className="card-title">Risk Timeline <span className="hint">thresholds 0.60 / 0.75 / 0.90</span></div>
-          <RiskTimeline data={results} />
+          <div className="card-title">
+            Risk Timeline <span className="hint">thresholds 0.60 / 0.75 / 0.90</span>
+          </div>
+          {results.length === 0 ? (
+            <EmptyState
+              icon="📊"
+              title="No data yet"
+              message="Start a demo or stream audio to see the risk timeline"
+              action={{ label: 'Start Demo', onClick: () => playDemo('real_speech') }}
+            />
+          ) : (
+            <>
+              <button className="btn ghost export-btn" onClick={exportChart}>⬇ Export SVG</button>
+              <RiskTimeline data={results} />
+            </>
+          )}
         </section>
 
         <section className="card">
           <div className="card-title">Technical Metrics</div>
-          <TechMetrics last={last} />
+          {last ? <TechMetrics last={last} /> : (
+            <EmptyState icon="📈" title="No metrics" message="Analysis results will appear here" />
+          )}
         </section>
 
         <section className="card">
           <div className="card-title">Signal Analysis</div>
-          <SignalAnalysis last={last} />
+          {last ? <SignalAnalysis last={last} /> : (
+            <EmptyState icon="🎵" title="No signal data" message="Upload audio or run a demo to see features" />
+          )}
         </section>
 
         <section className="card">
@@ -343,7 +455,11 @@ export default function App() {
 
         <section className="card">
           <div className="card-title">Event Timeline</div>
-          <EventTimeline data={results} />
+          {results.length === 0 ? (
+            <EmptyState icon="📋" title="No events" message="Analysis events will appear here in real-time" />
+          ) : (
+            <EventTimeline data={results} />
+          )}
         </section>
       </main>
 
