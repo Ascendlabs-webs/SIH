@@ -10,45 +10,23 @@ function row(label: string, value: string) {
   );
 }
 
-export function TechMetrics({ last, compact = false }: { last: AnalysisResult | null; compact?: boolean }) {
+export function TechMetrics({ last }: { last: AnalysisResult | null }) {
   if (!last) return <div className="empty">—</div>;
   const bd = last.latency_breakdown ?? {};
-  const metrics = compact
-    ? [
-        ['MFCC µ₀', `${(last.features?.mfcc_mean?.[0] ?? 0).toFixed(1)}`],
-        ['Spectral Centroid', `${(last.features?.spectral_centroid_mean ?? 0).toFixed(0)} Hz`],
-        ['Spectral Flux', `${(last.features?.spectral_flux_mean ?? 0).toFixed(2)}`],
-        ['Pitch F₀', `${(last.features?.f0_mean ?? 0).toFixed(0)} Hz ± ${(last.features?.f0_std ?? 0).toFixed(0)}`],
-        ['Voice Activity', `${Math.round((last.features?.vad_active_ratio ?? 0) * 100)}%`],
-        ['ZCR', `${(last.features?.zcr_mean ?? 0).toFixed(3)}`],
-        ['RMS', `${(last.features?.rms_mean ?? 0).toFixed(3)}`],
-        ['Silence', `${Math.round((last.features?.silence_ratio ?? 0) * 100)}%`],
-        ['Rolloff', `${(last.features?.spectral_rolloff_mean ?? 0).toFixed(0)} Hz`],
-        ['Window', `${last.window_duration.toFixed(2)} sec`],
-      ]
-    : [
-        ['Analysis window', `${last.window_duration.toFixed(2)} sec`],
-        ['Processing latency', `${last.latency_ms.toFixed(0)} ms`],
-        ['· preprocess', `${(bd.preprocess_ms ?? 0).toFixed(1)} ms`],
-        ['· features', `${(bd.features_ms ?? 0).toFixed(1)} ms`],
-        ['· inference', `${(bd.inference_ms ?? 0).toFixed(1)} ms`],
-        ['· risk', `${(bd.risk_ms ?? 0).toFixed(1)} ms`],
-        ['Audio', `${(last.sample_rate / 1000).toFixed(0)} kHz`],
-        ['VAD', last.vad_active ? 'ACTIVE' : 'IDLE'],
-        ['Detector', last.detector.toUpperCase()],
-        ['Audio risk', last.audio_risk.toFixed(2)],
-        ['Context adj.', `${last.context_risk >= 0 ? '+' : ''}${last.context_risk.toFixed(2)}`],
-        ['Protection', last.protection_state],
-      ];
-
   return (
-    <div className={compact ? 'metric-grid' : ''}>
-      {metrics.map(([label, value]) => (
-        <div className={compact ? 'metric-box' : 'metric-row'} key={label}>
-          <span className="metric-label">{label}</span>
-          <span className="metric-value">{value}</span>
-        </div>
-      ))}
+    <div>
+      {row('Analysis window', `${last.window_duration.toFixed(2)} sec`)}
+      {row('Processing latency', `${last.latency_ms.toFixed(0)} ms`)}
+      {row('· preprocess', `${(bd.preprocess_ms ?? 0).toFixed(1)} ms`)}
+      {row('· features', `${(bd.features_ms ?? 0).toFixed(1)} ms`)}
+      {row('· inference', `${(bd.inference_ms ?? 0).toFixed(1)} ms`)}
+      {row('· risk', `${(bd.risk_ms ?? 0).toFixed(1)} ms`)}
+      {row('Audio', `${(last.sample_rate / 1000).toFixed(0)} kHz`)}
+      {row('VAD', last.vad_active ? 'ACTIVE' : 'IDLE')}
+      {row('Detector', last.detector.toUpperCase())}
+      {row('Audio risk', last.audio_risk.toFixed(2))}
+      {row('Context adj.', `${last.context_risk >= 0 ? '+' : ''}${last.context_risk.toFixed(2)}`)}
+      {row('Protection', last.protection_state)}
     </div>
   );
 }
