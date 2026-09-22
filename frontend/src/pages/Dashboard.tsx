@@ -9,8 +9,6 @@ import { Assistant } from '../components/Assistant';
 import { EventTimeline, SignalAnalysis, TechMetrics } from '../components/Panels';
 import { AnimatedCounter } from '../components/AnimatedCounter';
 import { EmptyState } from '../components/EmptyState';
-import { Waveform } from '../components/Waveform';
-import { useConfetti } from '../components/Confetti';
 import { useToast } from '../components/Toast';
 import { useTheme } from '../components/Theme';
 import { levelColor } from '../components/helpers';
@@ -28,7 +26,6 @@ const DEFAULT_CTX: CallContext = {
 export default function Dashboard() {
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
-  const { burst, setCanvas } = useConfetti();
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [ctx, setCtx] = useState<CallContext>(DEFAULT_CTX);
   const [mode, setMode] = useState<'DEMO' | 'LIVE'>('DEMO');
@@ -38,7 +35,7 @@ export default function Dashboard() {
   const [model, setModel] = useState<ModelStatus | null>(null);
   const [vonage, setVonage] = useState<VonageStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const [sidebarOpen, setSidebarOpen] = useState(typeof window !== 'undefined' ? window.innerWidth > 768 : true);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -69,16 +66,23 @@ export default function Dashboard() {
   const mic = useMic(onMicChunk);
 
   useEffect(() => {
-    Promise.all([
-      fetchStatus().catch(() => null),
-      getModelStatus().catch(() => null),
-      getVonageStatus().catch(() => null),
-    ]).then(([s, m, v]) => {
-      setStatus(s);
-      setModel(m);
-      setVonage(v);
-      setLoading(false);
-    });
+    const fetchData = async () => {
+      try {
+        const [s, m, v] = await Promise.all([
+          fetchStatus().catch(() => null),
+          getModelStatus().catch(() => null),
+          getVonageStatus().catch(() => null),
+        ]);
+        setStatus(s);
+        setModel(m);
+        setVonage(v);
+      } catch (e) {
+        console.error('Failed to fetch status:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
     refreshProtection();
     const id = setInterval(() => {
       fetchStatus().then(setStatus).catch(() => undefined);
@@ -270,7 +274,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-layout">
-      <canvas ref={setCanvas} className="confetti-canvas" />
       <ParticleBackground />
 
       {/* Sidebar */}

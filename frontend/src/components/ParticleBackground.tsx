@@ -23,8 +23,8 @@ export default function ParticleBackground() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const colors = ['#0ea5e9', '#8b5cf6', '#ec4899', '#10b981'];
-    const count = 50;
+    const colors = ['#4F46E5', '#8B5CF6', '#EC4899', '#10B981'];
+    const count = window.innerWidth < 768 ? 20 : 40;
     let w = window.innerWidth;
     let h = window.innerHeight;
 
@@ -35,10 +35,10 @@ export default function ParticleBackground() {
     particles.current = Array.from({ length: count }, () => ({
       x: Math.random() * w,
       y: Math.random() * h,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
+      vx: (Math.random() - 0.5) * 0.2,
+      vy: (Math.random() - 0.5) * 0.2,
       size: Math.random() * 2 + 0.5,
-      opacity: Math.random() * 0.4 + 0.1,
+      opacity: Math.random() * 0.3 + 0.1,
       color: colors[Math.floor(Math.random() * colors.length)],
     }));
 
@@ -74,15 +74,15 @@ export default function ParticleBackground() {
         const dx = mouse.current.x - p.x;
         const dy = mouse.current.y - p.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 120) {
-          const force = (120 - dist) / 120;
-          p.vx -= (dx / dist) * force * 0.02;
-          p.vy -= (dy / dist) * force * 0.02;
+        if (dist < 100) {
+          const force = (100 - dist) / 100;
+          p.vx -= (dx / dist) * force * 0.015;
+          p.vy -= (dy / dist) * force * 0.015;
         }
 
         // Dampen
-        p.vx *= 0.99;
-        p.vy *= 0.99;
+        p.vx *= 0.995;
+        p.vy *= 0.995;
 
         // Draw
         ctx.beginPath();
@@ -101,12 +101,12 @@ export default function ParticleBackground() {
           const dx = a.x - b.x;
           const dy = a.y - b.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 100) {
+          if (dist < 80) {
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
             ctx.strokeStyle = a.color;
-            ctx.globalAlpha = 0.06 * (1 - dist / 100);
+            ctx.globalAlpha = 0.04 * (1 - dist / 80);
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -128,7 +128,13 @@ export default function ParticleBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="particle-canvas"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        zIndex: 0,
+        opacity: 0.4,
+      }}
       aria-hidden="true"
     />
   );
