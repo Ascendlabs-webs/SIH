@@ -38,7 +38,7 @@ export default function Dashboard() {
   const [model, setModel] = useState<ModelStatus | null>(null);
   const [vonage, setVonage] = useState<VonageStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
