@@ -382,8 +382,8 @@ export default function Dashboard() {
               <div className="waveform-display">
                 {mic.active ? (
                   <div className="waveform-bars">
-                    {Array.from({ length: 40 }, (_, i) => (
-                      <div key={i} className="wave-bar" style={{ height: `${Math.random() * 80 + 20}%`, animationDelay: `${i * 30}ms` }} />
+                    {Array.from({ length: 50 }, (_, i) => (
+                      <div key={i} className="wave-bar" style={{ height: `${Math.random() * 80 + 20}%`, animationDelay: `${i * 40}ms` }} />
                     ))}
                   </div>
                 ) : (
@@ -484,7 +484,7 @@ export default function Dashboard() {
                     <div className={`tx-status ${blocked ? 'blocked' : 'ok'}`}>
                       Status: {verified ? 'VERIFIED — RELEASED' : blocked ? `${protState} — ACTION HELD` : protState === 'ESCALATED' ? 'ESCALATED TO SUPERVISOR' : level === 'GREEN' ? 'ALLOWED' : 'FLAGGED — REVIEW'}
                     </div>
-                    <div className="controls protect-btns">
+                    <div className="protect-btns">
                       <button className="btn warn" disabled={!last} onClick={() => void onProtect('request_otp')}>Request OTP</button>
                       <button className="btn warn" disabled={!last} onClick={() => void onProtect('request_callback')}>Request Callback</button>
                       <button className="btn warn" disabled={!last || verified} onClick={() => void onProtect('mark_verified')}>{verified ? '✓ Verified' : 'Mark Verified'}</button>
@@ -503,6 +503,33 @@ export default function Dashboard() {
         </main>
       </div>
       <Assistant last={last} />
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+      {/* Mobile Bottom Navigation */}
+      <nav className="mobile-bottom-nav">
+        <div className="mobile-bottom-nav-inner">
+          <button className="mobile-nav-item-bottom active">
+            <span className="nav-icon">🏠</span>
+            <span>Dashboard</span>
+          </button>
+          <button className="mobile-nav-item-bottom">
+            <span className="nav-icon">🎤</span>
+            <span>Live</span>
+          </button>
+          <button className="mobile-nav-item-bottom">
+            <span className="nav-icon">⬆️</span>
+            <span>Upload</span>
+          </button>
+          <button className="mobile-nav-item-bottom">
+            <span className="nav-icon">📊</span>
+            <span>Analytics</span>
+          </button>
+          <button className="mobile-nav-item-bottom">
+            <span className="nav-icon">⚙️</span>
+            <span>Settings</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }
