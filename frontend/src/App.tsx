@@ -85,6 +85,21 @@ export default function App() {
   const [model, setModel] = useState<ModelStatus | null>(null);
   const [vonage, setVonage] = useState<VonageStatus | null>(null);
   const [page, setPage] = useState<Page>('dashboard');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('vauth-theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('vauth-theme', theme);
+  }, [theme]);
+  const [query, setQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [sideOpen, setSideOpen] = useState(false);
+  const [toasts, setToasts] = useState<Array<{ id: number; text: string; bad: boolean }>>([]);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const toastId = useRef(0);
   const [elapsed, setElapsed] = useState(24);
   const [uploadResult, setUploadResult] = useState<AnalysisResult | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -152,6 +167,7 @@ export default function App() {
     ? Math.round(results.reduce((n, r) => n + r.latency_ms, 0) / results.length)
     : 109;
   const maxRisk = results.length ? Math.max(...results.map((r) => r.risk_score)) : 0.14;
+  const statsLoading = status === null;
 
   const playDemo = async (scenario: 'real' | 'synthetic' | 'real_speech') => {
     cancelInflight();
@@ -299,12 +315,50 @@ export default function App() {
   const recoOk = (last?.risk_score ?? 0.11) < 0.6;
   const banner = notice ?? lastError ?? mic.error;
 
+  // Toasts mirror the notice banner (auto-dismiss, closable).
+  const bannerRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!banner || bannerRef.current === banner) return;
+    bannerRef.current = banner;
+    const id = ++toastId.current;
+    const bad = /fail|error|unreachable|timed out|denied|invalid/i.test(banner);
+    setToasts((t) => [...t.slice(-3), { id, text: banner, bad }]);
+    const killer = setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 6000);
+    return () => clearTimeout(killer);
+  }, [banner]);
+
+  // Ctrl/⌘+K focuses search.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const matches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return NAV.filter((n) => n.label.toLowerCase().includes(q)).slice(0, 6);
+  }, [query]);
+
+  const goSearch = (p: Page) => {
+    setPage(p);
+    setQuery('');
+    setSearchOpen(false);
+    setSideOpen(false);
+    searchRef.current?.blur();
+  };
+
   return (
-    <div className="app">
+    <div className={`app${sideOpen ? ' drawer' : ''}`}>
       {/* ============ SIDEBAR ============ */}
       <aside className="side">
         <div className="side-logo">
-          <span className="vmark">V</span>
+          <img src="/logo.svg" alt="VAuth logo" />
           <div>
             <div className="vname">VAuth <span className="vwave">◁•▮•▷</span></div>
             <div className="vtag">Real Voices. Real Trust.</div>
@@ -312,7 +366,7 @@ export default function App() {
         </div>
         <nav className="nav">
           {NAV.map((n) => (
-            <button key={n.key} className={page === n.key ? 'active' : ''} onClick={() => setPage(n.key)}>
+            <button key={n.key} className={page === n.key ? 'active' : ''} onClick={() => { setPage(n.key); setSideOpen(false); }}>
               <i>{n.icon}</i> {n.label}
             </button>
           ))}
@@ -328,14 +382,38 @@ export default function App() {
         </div>
       </aside>
 
+      {sideOpen && <button className="scrim" aria-label="close menu" onClick={() => setSideOpen(false)} />}
       {/* ============ MAIN ============ */}
       <div className="main">
         <header className="top">
-          <button className="icon-btn" aria-label="menu">☰</button>
-          <div className="search">
-            <span>⌕</span>
-            <input placeholder="Search calls, recordings, or users..." />
-            <kbd>Ctrl K</kbd>
+          <button className="icon-btn" aria-label="menu" onClick={() => setSideOpen((o) => !o)}>☰</button>
+          <div className="search-wrap">
+            <div className="search">
+              <span>⌕</span>
+              <input
+                ref={searchRef}
+                value={query}
+                placeholder="Search calls, recordings, or users..."
+                onChange={(e) => { setQuery(e.target.value); setSearchOpen(true); }}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && matches.length) goSearch(matches[0].key);
+                  else if (e.key === 'Escape') { setQuery(''); setSearchOpen(false); searchRef.current?.blur(); }
+                }}
+              />
+              <kbd>Ctrl K</kbd>
+            </div>
+            {searchOpen && query.trim() && (
+              <div className="search-drop">
+                {matches.length === 0 && <div className="none">No pages match “{query.trim()}”.</div>}
+                {matches.map((m) => (
+                  <button key={m.key} onMouseDown={(e) => e.preventDefault()} onClick={() => goSearch(m.key)}>
+                    <i>{m.icon}</i> {m.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="top-right">
             <span className={`conn2 ${connected ? 'on' : ''}`}>
@@ -343,6 +421,9 @@ export default function App() {
               <small>Model: {model?.model_name ?? 'DemoVoiceDetector'}</small>
             </span>
             <span className="modepill">Mode: {model?.mode_label ?? 'DEMO'}</span>
+            <button className="theme-toggle" onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))} title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} aria-label="toggle theme">
+              {theme === 'dark' ? '☀' : '☾'}
+            </button>
             <button className="icon-btn bell" aria-label="alerts">🔔<em /></button>
             <span className="avatar">M</span>
             <span className="date">{dateStr}<br />{timeStr}</span>
@@ -352,6 +433,7 @@ export default function App() {
         {model?.warning && <div className="warn">⚠ {model.warning}</div>}
         {banner && page !== 'live' && page !== 'upload' && <div className="notice page-banner">{banner}</div>}
 
+        <div className="page-anim" key={page}>
         {/* ================= DASHBOARD ================= */}
         {page === 'dashboard' && (
           <>
@@ -365,15 +447,15 @@ export default function App() {
             <section className="stats">
               <div className="stat">
                 <span className="stat-ic blue">◁•▮•▷</span>
-                <div><small>Total Detections</small><strong>{totalDetections}</strong><span className="delta up">↑ 12% <em>vs. last session</em></span></div>
+                <div><small>Total Detections</small><strong>{statsLoading ? <span className="skel">000</span> : totalDetections}</strong><span className="delta up">↑ 12% <em>vs. last session</em></span></div>
               </div>
               <div className="stat">
                 <span className="stat-ic green">🛡</span>
-                <div><small>Threats Flagged</small><strong>{threats}</strong><span className="delta up">↑ 25% <em>vs. last session</em></span></div>
+                <div><small>Threats Flagged</small><strong>{statsLoading ? <span className="skel">00</span> : threats}</strong><span className="delta up">↑ 25% <em>vs. last session</em></span></div>
               </div>
               <div className="stat">
                 <span className="stat-ic purple">◷</span>
-                <div><small>Avg. Processing Time</small><strong>{avgMs} ms</strong><span className="delta down">↓ 32% <em>vs. last session</em></span></div>
+                <div><small>Avg. Processing Time</small><strong>{statsLoading ? <span className="skel">000 ms</span> : `${avgMs} ms`}</strong><span className="delta down">↓ 32% <em>vs. last session</em></span></div>
               </div>
               <div className="stat">
                 <span className="stat-ic blue">▤</span>
@@ -682,10 +764,20 @@ export default function App() {
           </>
         )}
 
+        </div>
+
         <footer className="foot2">
           <span>VAuth v1.0.0 &nbsp;|&nbsp; AI-Powered Voice Cloning Identification SDK &nbsp;|&nbsp; For research and educational use only.</span>
           <span className="right">A safer world through authentic conversations.</span>
         </footer>
+      </div>
+      <div className="toasts">
+        {toasts.map((t) => (
+          <div key={t.id} className={`toast${t.bad ? ' bad' : ''}`}>
+            <span>{t.bad ? '⚠' : 'ℹ'} {t.text}</span>
+            <button aria-label="dismiss" onClick={() => setToasts((x) => x.filter((y) => y.id !== t.id))}>✕</button>
+          </div>
+        ))}
       </div>
       <Assistant last={last} />
     </div>
