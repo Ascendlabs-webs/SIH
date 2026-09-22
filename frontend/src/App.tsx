@@ -228,6 +228,7 @@ export default function App() {
 
   return (
     <div className="shell">
+      <div className="scanlines" />
       <header className="topbar">
         <div className="brand">
           <img src="/logo.svg" className="logo-img" alt="VAuth logo" />
