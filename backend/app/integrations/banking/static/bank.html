@@ -3,361 +3,342 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VAuth Demo Bank — Simulated Environment</title>
+<title>VAuth Demo Bank — Simulated Banking Suite</title>
 <style>
 :root {
   color-scheme: light;
-  --neon-cyan: #0ea5e9;
-  --neon-purple: #8b5cf6;
-  --neon-pink: #ec4899;
-  --neon-green: #10b981;
-  --neon-red: #ef4444;
-  --neon-orange: #f97316;
-  --neon-yellow: #eab308;
-  --bg-base: #f1f5f9;
-  --bg-card: rgba(255, 255, 255, 0.7);
-  --border-glass: rgba(255, 255, 255, 0.5);
-  --text-primary: #0f172a;
-  --text-muted: #64748b;
-  --glow-cyan: 0 0 8px rgba(14, 165, 233, 0.2), 0 0 20px rgba(14, 165, 233, 0.08);
-  --glow-purple: 0 0 8px rgba(139, 92, 246, 0.2), 0 0 20px rgba(139, 92, 246, 0.08);
-  --glow-pink: 0 0 8px rgba(236, 72, 153, 0.2), 0 0 20px rgba(236, 72, 153, 0.08);
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
-  --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --bg: #eef2f9;
+  --card: rgba(255, 255, 255, 0.62);
+  --solid: #ffffff;
+  --line: rgba(255, 255, 255, 0.65);
+  --line-soft: #e8edf5;
+  --ink: #0f1f3d;
+  --muted: #6b7a99;
+  --blue: #2563eb;
+  --blue-soft: rgba(37, 99, 235, 0.1);
+  --green: #16a34a;
+  --green-soft: rgba(22, 163, 74, 0.12);
+  --purple: #7c3aed;
+  --purple-soft: rgba(124, 58, 237, 0.1);
+  --red: #dc2626;
+  --red-soft: rgba(220, 38, 38, 0.08);
+  --amber: #d97706;
+  --amber-soft: rgba(217, 119, 6, 0.1);
+  --shadow: 0 8px 32px rgba(15, 31, 61, 0.08);
+  --blur: blur(18px) saturate(1.4);
 }
-
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #070c18;
+  --card: rgba(17, 25, 46, 0.6);
+  --solid: #0d1528;
+  --line: rgba(148, 178, 255, 0.16);
+  --line-soft: rgba(148, 178, 255, 0.12);
+  --ink: #e8eefb;
+  --muted: #8ea0c2;
+  --blue: #60a5fa;
+  --blue-soft: rgba(96, 165, 250, 0.14);
+  --green: #34d399;
+  --green-soft: rgba(52, 211, 153, 0.13);
+  --purple: #a78bfa;
+  --purple-soft: rgba(167, 139, 250, 0.14);
+  --red: #f87171;
+  --red-soft: rgba(248, 113, 113, 0.1);
+  --amber: #fbbf24;
+  --amber-soft: rgba(251, 191, 36, 0.12);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
 * { box-sizing: border-box; }
-
 body {
-  margin: 0;
-  background: var(--bg-base);
-  background-image:
-    radial-gradient(ellipse 600px 600px at 10% 20%, rgba(14, 165, 233, 0.04), transparent),
-    radial-gradient(ellipse 500px 500px at 90% 30%, rgba(139, 92, 246, 0.04), transparent),
-    radial-gradient(ellipse 400px 400px at 50% 80%, rgba(236, 72, 153, 0.03), transparent);
-  background-attachment: fixed;
-  color: var(--text-primary);
+  margin: 0; color: var(--ink);
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  min-height: 100vh;
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse 640px 480px at 8% -4%, rgba(37, 99, 235, 0.14), transparent),
+    radial-gradient(ellipse 560px 480px at 96% 12%, rgba(124, 58, 237, 0.12), transparent),
+    radial-gradient(ellipse 700px 520px at 50% 110%, rgba(22, 163, 74, 0.08), transparent);
+  background-attachment: fixed; min-height: 100vh;
+  transition: background 0.25s ease, color 0.25s ease;
 }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 18px 20px 40px; }
 
-.wrap { max-width: 800px; margin: 0 auto; padding: 24px; }
-
-/* Banner */
-.sim {
-  background: linear-gradient(90deg, rgba(14, 165, 233, 0.12), rgba(139, 92, 246, 0.08));
-  color: var(--neon-cyan);
-  text-align: center;
-  font-weight: 800;
-  letter-spacing: 2px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  border: 1px solid rgba(14, 165, 233, 0.15);
-  backdrop-filter: blur(10px);
-  font-size: 12px;
+/* top bar */
+.topbar {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--card); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+  padding: 10px 16px; margin-bottom: 14px; position: sticky; top: 12px; z-index: 20;
 }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand .mark {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: #fff; font-weight: 900; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+.brand b { font-size: 16px; }
+.brand small { display: block; font-size: 10px; color: var(--muted); font-weight: 500; }
+.simbadge {
+  font-size: 10px; font-weight: 800; letter-spacing: 1px; color: var(--amber);
+  background: var(--amber-soft); border: 1px solid currentColor;
+  padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+}
+.top-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.linkbtn {
+  font-size: 12px; font-weight: 700; color: var(--blue); text-decoration: none;
+  border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 8px 12px;
+}
+.linkbtn:hover { border-color: var(--blue); }
+.iconbtn {
+  width: 34px; height: 34px; border-radius: 11px; cursor: pointer; font-size: 16px;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+}
+.iconbtn:hover { border-color: var(--blue); }
 
-/* Cards */
+/* layout */
+.grid { display: grid; grid-template-columns: 340px 1fr; gap: 14px; align-items: start; }
+.col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-glass);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  backdrop-filter: blur(20px);
-  box-shadow: var(--shadow-card);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  background: var(--card); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow);
+  padding: 18px; position: relative; overflow: hidden; min-width: 0;
+  animation: cardIn 0.4s ease both;
 }
-
 .card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.02), transparent 60%);
-  pointer-events: none;
+  content: ''; position: absolute; inset: 0; border-radius: 18px; pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 55%);
 }
+[data-theme="dark"] .card::before { background: linear-gradient(135deg, rgba(148, 178, 255, 0.09), transparent 55%); }
+@keyframes cardIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.card h2 { margin: 0 0 2px; font-size: 15px; }
+.card .sub { color: var(--muted); font-size: 11px; margin-bottom: 12px; }
 
-.card:hover {
-  box-shadow: var(--shadow-hover);
-  border-color: rgba(14, 165, 233, 0.25);
-}
+/* account */
+.acct-bal { font-size: 34px; font-weight: 800; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; margin: 2px 0 8px; }
+.acct-rows { display: flex; flex-direction: column; }
+.acct-rows div { display: flex; justify-content: space-between; font-size: 12px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); }
+.acct-rows div:last-child { border-bottom: none; }
+.acct-rows span { color: var(--muted); }
+.acct-rows b { font-weight: 600; }
+.mono { font-family: ui-monospace, Consolas, monospace; font-size: 11px; }
 
-h1 {
-  font-size: 22px;
-  margin: 0 0 4px;
-  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+/* vauth live */
+.riskbar { height: 10px; border-radius: 6px; background: rgba(130, 150, 190, 0.25); overflow: hidden; margin: 8px 0 4px; }
+.riskbar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #22c55e, #eab308, #f97316, #ef4444); transition: width 0.5s ease; }
+.lvl-GREEN { color: var(--green); font-weight: 800; }
+.lvl-YELLOW { color: var(--amber); font-weight: 800; }
+.lvl-ORANGE { color: #f97316; font-weight: 800; }
+.lvl-RED { color: var(--red); font-weight: 800; }
+.livedot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: pulseDot 1.6s ease-in-out infinite; }
+@keyframes pulseDot { 0%, 100% { box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2); } 50% { box-shadow: 0 0 0 7px rgba(22, 163, 74, 0.05); } }
 
-.sub {
-  color: var(--text-muted);
-  font-size: 13px;
-  margin-bottom: 14px;
-  line-height: 1.5;
-}
-
-/* Rows */
-.row {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
-  font-size: 14px;
-}
-
-.row:last-child { border-bottom: none; }
-
-.row b {
-  font-variant-numeric: tabular-nums;
-  color: var(--text-primary);
-}
-
-/* Status badges */
-.status {
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  display: inline-block;
-  font-size: 12px;
-}
-
-.status.PENDING {
-  background: rgba(14, 165, 233, 0.08);
-  color: var(--neon-cyan);
-  border: 1px solid rgba(14, 165, 233, 0.25);
-}
-
-.status.PENDING_VERIFICATION {
-  background: rgba(249, 115, 22, 0.08);
-  color: var(--neon-orange);
-  border: 1px solid rgba(249, 115, 22, 0.25);
-}
-
-.status.APPROVED {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--neon-green);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.status.BLOCKED,
-.status.FAILED {
-  background: rgba(239, 68, 68, 0.08);
-  color: var(--neon-red);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-}
-
-/* Alert levels */
-.lvl-RED { color: var(--neon-red); font-weight: 800; }
-.lvl-ORANGE { color: var(--neon-orange); font-weight: 800; }
-.lvl-YELLOW { color: var(--neon-yellow); font-weight: 800; }
-.lvl-GREEN { color: var(--neon-green); font-weight: 800; }
-
-/* Buttons */
-.btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-
-button {
-  border: 1px solid rgba(14, 165, 233, 0.2);
-  background: rgba(255, 255, 255, 0.6);
-  color: var(--text-primary);
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-weight: 700;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
-}
-
-button:hover:not(:disabled) {
-  border-color: var(--neon-cyan);
-  box-shadow: var(--glow-cyan);
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.9);
-}
-
-button:active:not(:disabled) { transform: translateY(0); }
-
-button:disabled { opacity: 0.35; cursor: default; }
-
-button.primary {
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(139, 92, 246, 0.1));
-  border-color: rgba(14, 165, 233, 0.3);
-  color: var(--neon-cyan);
-}
-
-button.primary:hover:not(:disabled) {
-  box-shadow: 0 0 12px rgba(14, 165, 233, 0.2);
-  border-color: var(--neon-cyan);
-}
-
-button.danger {
-  background: rgba(239, 68, 68, 0.06);
-  border-color: rgba(239, 68, 68, 0.25);
-  color: var(--neon-red);
-}
-
-button.danger:hover:not(:disabled) {
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
-  border-color: var(--neon-red);
-}
-
-/* Inputs */
+/* transfer */
+label.f { display: flex; flex-direction: column; gap: 6px; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 10px; }
 input, select {
-  padding: 10px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 10px;
-  font-size: 14px;
-  background: rgba(255, 255, 255, 0.7);
-  color: var(--text-primary);
-  backdrop-filter: blur(10px);
-  transition: all 0.2s ease;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+  font-size: 13px; background: var(--solid); color: var(--ink); width: 100%;
 }
+input:focus, select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+.presets button { border: 1px solid var(--line); background: var(--blue-soft); color: var(--blue); border-radius: 10px; padding: 8px 4px; font-size: 12px; font-weight: 800; cursor: pointer; }
+.presets button small { display: block; font-size: 9px; font-weight: 500; opacity: 0.8; }
+.presets button:hover { border-color: var(--blue); }
+button.act {
+  border: 1px solid rgba(37, 99, 235, 0.3); background: linear-gradient(135deg, rgba(37,99,235,.16), rgba(124,58,237,.1));
+  color: var(--blue); border-radius: 10px; padding: 11px 14px; font-weight: 800; font-size: 13px; cursor: pointer; width: 100%;
+}
+button.act:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25); }
+button.act:disabled { opacity: 0.45; cursor: default; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.btnrow button, .btnrow .ghostbtn {
+  flex: 1 1 auto; border: 1px solid var(--line); background: var(--solid); color: var(--ink);
+  border-radius: 10px; padding: 9px 8px; font-size: 11px; font-weight: 700; cursor: pointer; text-align: center;
+}
+.btnrow button:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+.btnrow button:disabled { opacity: 0.35; cursor: default; }
+.btnrow button.danger { color: var(--red); }
+.btnrow button.go { background: var(--green-soft); border-color: currentColor; color: var(--green); }
+.hint { font-size: 11px; color: var(--muted); line-height: 1.6; margin-top: 10px; }
 
-input:focus, select:focus {
-  outline: none;
-  border-color: var(--neon-cyan);
-  box-shadow: var(--glow-cyan);
+/* queue */
+.qtable { display: flex; flex-direction: column; }
+.qrow {
+  display: grid; grid-template-columns: 86px 1fr auto auto; gap: 10px; align-items: center;
+  padding: 9px 4px; border-bottom: 1px solid var(--line-soft); font-size: 12px; cursor: pointer;
+  border-left: 3px solid transparent; border-radius: 6px;
 }
+.qrow:last-child { border-bottom: none; }
+.qrow:hover { background: var(--blue-soft); }
+.qrow.sel { background: var(--blue-soft); border-left-color: var(--blue); }
+.qrow .amt { font-weight: 800; font-variant-numeric: tabular-nums; }
+.qrow .ben { color: var(--muted); font-size: 11px; }
+.status { font-weight: 800; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 999px; font-size: 10px; white-space: nowrap; }
+.status.PENDING { background: var(--blue-soft); color: var(--blue); }
+.status.PENDING_VERIFICATION { background: var(--amber-soft); color: var(--amber); }
+.status.APPROVED { background: var(--green-soft); color: var(--green); }
+.status.BLOCKED, .status.FAILED { background: var(--red-soft); color: var(--red); }
 
-/* Log box */
-.log {
-  font-size: 12px;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(14, 165, 233, 0.1);
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin-top: 10px;
-  backdrop-filter: blur(10px);
-  line-height: 1.6;
-}
+/* detail */
+.detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.detail-head .amt { font-size: 22px; font-weight: 800; }
+.kv { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.kv div { background: rgba(130, 150, 190, 0.1); border: 1px solid var(--line-soft); border-radius: 10px; padding: 8px 10px; }
+.kv span { display: block; font-size: 10px; color: var(--muted); }
+.kv b { font-size: 12px; }
+.reason { font-size: 12px; color: var(--muted); background: rgba(130,150,190,0.1); border-radius: 10px; padding: 10px 12px; line-height: 1.6; }
+.challenges { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.chip { font-size: 11px; padding: 7px 10px; border-radius: 9px; background: rgba(130,150,190,0.12); display: flex; gap: 8px; align-items: center; }
+.chip.ok { background: var(--green-soft); color: var(--green); font-weight: 700; }
+.chip.no { background: var(--red-soft); color: var(--red); font-weight: 700; }
 
-.err {
-  color: var(--neon-red);
-  font-size: 12px;
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: rgba(239, 68, 68, 0.05);
-  border-radius: 8px;
-  border-left: 3px solid var(--neon-red);
-}
+/* audit log */
+.audit { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 11px; }
+.audit div { padding: 7px 10px; border-radius: 8px; background: rgba(130,150,190,0.1); color: var(--muted); }
+.audit div b { color: var(--ink); }
+.audit div.bad { background: var(--red-soft); color: var(--red); }
+.audit div.good { background: var(--green-soft); color: var(--green); }
 
-/* Transfer form */
-.transfer-form {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-}
+/* modal */
+.overlay { position: fixed; inset: 0; background: rgba(7, 12, 24, 0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+.modal { background: var(--solid); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); max-width: 420px; width: 100%; padding: 24px; animation: cardIn 0.25s ease both; }
+.modal h3 { margin: 0 0 4px; font-size: 16px; }
+.modal p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.sms { background: var(--blue-soft); border: 1px dashed var(--blue); border-radius: 12px; padding: 12px; font-size: 12px; margin: 12px 0; line-height: 1.6; }
+.sms b { font-size: 20px; letter-spacing: 6px; }
+.otpinputs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 12px 0; }
+.otpinputs input { text-align: center; font-size: 18px; font-weight: 800; padding: 10px 4px; }
+.timer { font-size: 11px; color: var(--muted); margin-bottom: 10px; font-variant-numeric: tabular-nums; }
 
-.transfer-form label {
-  font-size: 13px;
-  color: var(--text-muted);
-  font-weight: 600;
-}
+/* toasts */
+.toasts { position: fixed; right: 18px; bottom: 18px; z-index: 80; display: flex; flex-direction: column; gap: 8px; max-width: min(360px, calc(100vw - 36px)); }
+.toast { background: var(--card); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 12px; box-shadow: var(--shadow); padding: 10px 12px; font-size: 12px; display: flex; gap: 10px; animation: cardIn 0.25s ease both; }
+.toast.bad { border-left-color: var(--red); }
 
-.transfer-form input {
-  width: 180px;
-}
-
-/* Section title */
-.section-title {
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-  position: relative;
-}
-
-.section-title::after {
-  content: '';
-  display: block;
-  width: 25px;
-  height: 2px;
-  margin-top: 4px;
-  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple), transparent);
-  border-radius: 1px;
-}
-
-/* Responsive */
-@media (max-width: 600px) {
-  .wrap { padding: 16px; }
-  .transfer-form input { width: 100%; }
-  .btns .btn { flex: 1 1 auto; }
-}
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.02); }
-::-webkit-scrollbar-thumb {
-  background: rgba(14, 165, 233, 0.2);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover { background: rgba(14, 165, 233, 0.4); }
-
-/* Pulse animation for live indicator */
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.live-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--neon-green);
-  margin-right: 6px;
-  animation: pulse-soft 2s ease-in-out infinite;
-}
+.foot { text-align: center; font-size: 11px; color: var(--muted); padding: 18px 0 6px; }
+@media (max-width: 960px) { .grid { grid-template-columns: 1fr; } .qrow { grid-template-columns: 76px 1fr auto; } .qrow .hidem { display: none; } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="sim">SIMULATED BANKING ENVIRONMENT — NO REAL MONEY</div>
-
-  <div class="card">
-    <h1>VAuth Demo Bank</h1>
-    <div class="sub">Policy-enforced demo: VAuth decides, the bank enforces. Run a voice demo on the VAuth dashboard first to set live risk.</div>
-    <div class="row"><span>Customer</span><b>Rahul Sharma</b></div>
-    <div class="row"><span>Account</span><b>VAUTH-10001</b></div>
-    <div class="row"><span>Balance</span><b id="balance">—</b></div>
-    <div class="btns"><button id="resetbank">Reset demo ledger</button></div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">Live VAuth decision</div>
-    <div class="row"><span>Risk</span><b id="v-risk">—</b></div>
-    <div class="row"><span>Alert</span><b id="v-alert">—</b></div>
-    <div class="row"><span>Protection</span><b id="v-prot">—</b></div>
-    <div class="sub" id="v-note"><span class="live-dot"></span>Polling the VAuth backend every 3 s.</div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">Transfer request</div>
-    <div class="transfer-form">
-      <label>Amount (₹) <input id="amount" type="number" value="500000" min="1" step="1000"></label>
-      <button class="primary" id="create">Create transfer</button>
+  <div class="topbar">
+    <div class="brand"><span class="mark">V</span><div><b>VAuth Demo Bank</b><small>Simulated banking suite · no real money</small></div></div>
+    <span class="simbadge">SIMULATED</span>
+    <div class="top-right">
+      <a class="linkbtn" href="/" onclick="goDash(event)">← Dashboard</a>
+      <button class="iconbtn" id="theme" title="Toggle theme">☾</button>
     </div>
-    <div id="tx"></div>
   </div>
+
+  <div class="grid">
+    <div class="col">
+      <div class="card">
+        <h2>Rahul Sharma</h2>
+        <div class="sub mono">VAUTH-10001 · savings</div>
+        <div class="acct-bal" id="balance">—</div>
+        <div class="acct-rows">
+          <div><span>Available</span><b id="avail">—</b></div>
+          <div><span>In verification hold</span><b id="held">—</b></div>
+          <div><span>Session transfers</span><b id="tcount">0</b></div>
+        </div>
+        <div class="btnrow"><button id="resetbank">Reset demo ledger</button></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="livedot"></span>Live VAuth decision</h2>
+        <div class="sub">Polled every 3 s — the bank enforces this</div>
+        <div class="acct-rows">
+          <div><span>Risk</span><b id="v-risk">—</b></div>
+          <div><span>Alert</span><b id="v-alert">—</b></div>
+          <div><span>Protection</span><b id="v-prot">—</b></div>
+        </div>
+        <div class="riskbar"><i id="v-bar" style="width:0%"></i></div>
+        <div class="hint" id="v-note">Run a voice demo on the dashboard to move live risk, then transfer here.</div>
+      </div>
+
+      <div class="card">
+        <h2>Beneficiaries</h2>
+        <div class="sub">Stored locally in your browser only</div>
+        <div class="acct-rows" id="benlist"></div>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <input id="benname" placeholder="Name — e.g. Aarav Mehta" />
+          <button class="act" id="benadd" style="width:auto">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card">
+        <h2>New transfer</h2>
+        <div class="sub">Snapshots the <b>current</b> VAuth decision at creation — policy enforced server-side</div>
+        <div class="presets">
+          <button data-amt="500">₹500<small>ordinary</small></button>
+          <button data-amt="50000">₹50,000<small>ordinary</small></button>
+          <button data-amt="500000">₹5,00,000<small>sensitive</small></button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <label class="f">Amount (₹)<input id="amount" type="number" value="500000" min="1" step="100" /></label>
+          <label class="f">Payee<select id="payee"></select></label>
+        </div>
+        <label class="f">Note<input id="note" value="Vendor payout" maxlength="120" /></label>
+        <button class="act" id="create">Create transfer →</button>
+        <div class="hint">GREEN → <b>PENDING</b> (approvable) · ORANGE/RED + sensitive ₹ → <b>PENDING_VERIFICATION</b> (OTP / callback / supervisor) · direct approve while held is rejected <b>409</b>.</div>
+      </div>
+
+      <div class="card">
+        <h2>Pending queue &amp; history</h2>
+        <div class="sub">Every transfer you create this session — click a row for actions</div>
+        <div class="qtable" id="queue"><div class="hint">No transfers yet — create one above.</div></div>
+      </div>
+
+      <div class="card" id="detailcard" style="display:none">
+        <h2>Transaction detail</h2>
+        <div class="sub mono" id="d-id"></div>
+        <div class="detail-head"><span class="amt" id="d-amt"></span><span class="status PENDING" id="d-status"></span></div>
+        <div class="kv">
+          <div><span>Payee</span><b id="d-ben"></b></div>
+          <div><span>VAuth at creation</span><b id="d-vauth"></b></div>
+          <div><span>Required actions</span><b id="d-req"></b></div>
+          <div><span>Balance after</span><b id="d-bal"></b></div>
+        </div>
+        <div class="reason" id="d-reason"></div>
+        <div class="challenges" id="d-ch"></div>
+        <div class="btnrow" id="d-btns"></div>
+      </div>
+
+      <div class="card">
+        <h2>Activity log</h2>
+        <div class="sub">Client-side audit trail of this demo session</div>
+        <div class="audit" id="audit"></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">VAuth Demo Bank · SIMULATED — no real money, no real OTP/SMS · VAuth decides, the bank enforces</div>
 </div>
+
+<div id="modalroot"></div>
+<div class="toasts" id="toasts"></div>
 
 <script>
 const $ = (id) => document.getElementById(id);
 const inr = (n) => '₹' + Number(n).toLocaleString('en-IN');
-let txId = null;
+const state = { txs: new Map(), active: null, ben: [], otp: null };
 
+// ---------- theme (shared key with dashboard) ----------
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('vauth-theme', t);
+  $('theme').textContent = t === 'dark' ? '☀' : '☾';
+}
+applyTheme(localStorage.getItem('vauth-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+$('theme').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+function goDash(e) {
+  e.preventDefault();
+  const dash = location.port === '5173' ? '/' : 'http://localhost:5173/';
+  location.href = dash;
+}
+
+// ---------- api ----------
 async function jget(p) { const r = await fetch(p); if (!r.ok) throw new Error(p + ' ' + r.status); return r.json(); }
 async function jpost(p, b) {
   const r = await fetch(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: b ? JSON.stringify(b) : '{}' });
@@ -365,66 +346,236 @@ async function jpost(p, b) {
   if (!r.ok) throw new Error(j.detail || ('HTTP ' + r.status));
   return j;
 }
-
-async function refreshAccount() {
-  try { $('balance').textContent = inr((await jget('/api/banking/account')).balance); } catch {}
+function toast(msg, bad) {
+  const d = document.createElement('div');
+  d.className = 'toast' + (bad ? ' bad' : '');
+  d.textContent = (bad ? '⚠ ' : 'ℹ ') + msg;
+  $('toasts').appendChild(d);
+  setTimeout(() => d.remove(), 6000);
+}
+function audit(msg, cls) {
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  d.innerHTML = '<b>' + new Date().toLocaleTimeString('en-GB') + '</b> · ' + msg;
+  const box = $('audit');
+  box.prepend(d);
+  while (box.children.length > 40) box.lastChild.remove();
 }
 
+// ---------- beneficiaries ----------
+function loadBen() {
+  try { state.ben = JSON.parse(localStorage.getItem('vauth-ben') || 'null') || ['Aarav Mehta · VAUTH-20002', 'Diya Nair · VAUTH-30003']; }
+  catch { state.ben = ['Aarav Mehta · VAUTH-20002', 'Diya Nair · VAUTH-30003']; }
+  renderBen();
+}
+function renderBen() {
+  $('benlist').innerHTML = state.ben.map((b) => '<div><span>Payee</span><b>' + b + '</b></div>').join('');
+  $('payee').innerHTML = state.ben.map((b) => '<option>' + b + '</option>').join('');
+}
+$('benadd').onclick = () => {
+  const v = $('benname').value.trim();
+  if (!v) return toast('Enter a beneficiary name first.', true);
+  state.ben.push(v);
+  localStorage.setItem('vauth-ben', JSON.stringify(state.ben));
+  $('benname').value = '';
+  renderBen();
+  audit('Beneficiary added: ' + v, 'good');
+};
+
+// ---------- account + vauth ----------
+async function refreshAccount() {
+  try {
+    const a = await jget('/api/banking/account');
+    animNum($('balance'), a.balance);
+    $('avail').textContent = inr(a.balance);
+    let held = 0;
+    state.txs.forEach((t) => { if (t.status === 'PENDING_VERIFICATION') held += t.amount; });
+    $('held').textContent = inr(held);
+    $('tcount').textContent = state.txs.size;
+  } catch {}
+}
+let shownBal = null;
+function animNum(el, target) {
+  if (shownBal === null) { shownBal = target; el.textContent = inr(target); return; }
+  const from = shownBal, t0 = performance.now();
+  shownBal = target;
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / 600);
+    el.textContent = inr(Math.round(from + (target - from) * k));
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 async function refreshVauth() {
   try {
     const v = await jget('/api/banking/vauth');
     $('v-risk').textContent = Math.round(v.risk_score * 100) + '%';
+    $('v-bar').style.width = Math.round(v.risk_score * 100) + '%';
     $('v-alert').innerHTML = '<span class="lvl-' + v.alert_level + '">' + v.alert_level + '</span>';
     $('v-prot').textContent = v.protection_state + (v.requires_secondary_verification ? ' (verification required)' : '');
   } catch { $('v-note').textContent = 'VAuth backend unreachable.'; }
 }
 
-function render(tx) {
-  const v = tx.vauth;
-  $('tx').innerHTML =
-    '<div class="row"><span>ID</span><b>' + tx.id + '</b></div>' +
-    '<div class="row"><span>Amount</span><b>' + inr(tx.amount) + '</b></div>' +
-    '<div class="row"><span>VAuth risk</span><b>' + Math.round(v.risk_score * 100) + '% &middot; <span class="lvl-' + v.alert_level + '">' + v.alert_level + '</span></b></div>' +
-    '<div class="row"><span>Status</span><span class="status ' + tx.status + '">' + tx.status + '</span></div>' +
-    '<div class="log">' + tx.reason + (tx.required_actions.length ? '<br>Required: ' + tx.required_actions.join(' &middot; ') : '') +
-    (tx.verification.length ? '<br>Challenges: ' + tx.verification.map(c => c.method + '=' + (c.success ? 'ok' : 'FAIL') + ' (simulated)').join(', ') : '') + '</div>' +
-    '<div class="err" id="txerr"></div>' +
-    '<div class="btns">' +
-    '<button data-a="approve" ' + (tx.status !== 'PENDING' ? 'disabled' : '') + '>Approve</button>' +
-    '<button data-a="otp" ' + (tx.status !== 'PENDING_VERIFICATION' ? 'disabled' : '') + '>Request OTP (simulate success)</button>' +
-    '<button data-a="otpfail" ' + (tx.status !== 'PENDING_VERIFICATION' ? 'disabled' : '') + '>Request OTP (simulate failure)</button>' +
-    '<button data-a="callback" ' + (tx.status !== 'PENDING_VERIFICATION' ? 'disabled' : '') + '>Request Callback</button>' +
-    '<button data-a="supervisor" ' + (tx.status !== 'PENDING_VERIFICATION' ? 'disabled' : '') + '>Supervisor Approval</button>' +
-    '<button data-a="block" class="danger" ' + ((tx.status !== 'PENDING' && tx.status !== 'PENDING_VERIFICATION') ? 'disabled' : '') + '>Block</button>' +
-    '</div>';
-  document.querySelectorAll('#tx button').forEach(b => b.onclick = () => act(b.dataset.a));
+// ---------- transfers ----------
+document.querySelectorAll('.presets button').forEach((b) => b.onclick = () => { $('amount').value = b.dataset.amt; });
+$('create').onclick = async () => {
+  const btn = $('create');
+  btn.disabled = true;
+  try {
+    const t = await jpost('/api/banking/transactions', {
+      amount: Number($('amount').value),
+      description: ($('note').value || 'Transfer') + ' → ' + $('payee').value,
+      sensitive_action: true,
+    });
+    state.txs.set(t.id, t);
+    state.active = t.id;
+    renderQueue(); renderDetail(); refreshAccount(); refreshVauth();
+    audit('Created ' + inr(t.amount) + ' → <b>' + t.status + '</b> (VAuth ' + t.vauth.alert_level + ')', t.status === 'PENDING' ? 'good' : '');
+    toast('Transfer ' + t.id + ' → ' + t.status, t.status === 'BLOCKED' || t.status === 'FAILED');
+  } catch (e) { toast(e.message, true); audit('Create failed: ' + e.message, 'bad'); }
+  finally { btn.disabled = false; }
+};
+$('resetbank').onclick = async () => {
+  await jpost('/api/banking/reset');
+  state.txs.clear(); state.active = null; shownBal = null;
+  $('detailcard').style.display = 'none';
+  renderQueue(); refreshAccount(); refreshVauth();
+  audit('Ledger reset to ₹12,50,000.', 'good');
+  toast('Demo ledger reset.');
+};
+
+function renderQueue() {
+  const q = $('queue');
+  if (!state.txs.size) { q.innerHTML = '<div class="hint">No transfers yet — create one above.</div>'; return; }
+  q.innerHTML = '';
+  [...state.txs.values()].reverse().forEach((t) => {
+    const row = document.createElement('div');
+    row.className = 'qrow' + (t.id === state.active ? ' sel' : '');
+    row.innerHTML = '<span class="amt">' + inr(t.amount) + '</span>' +
+      '<span class="ben">' + t.id + ' · ' + (t.description || '').slice(0, 42) + '</span>' +
+      '<span class="hidem mono">VAuth ' + t.vauth.alert_level + ' ' + Math.round(t.vauth.risk_score * 100) + '%</span>' +
+      '<span class="status ' + t.status + '">' + t.status + '</span>';
+    row.onclick = () => { state.active = t.id; renderQueue(); renderDetail(); };
+    q.appendChild(row);
+  });
 }
 
-async function act(a) {
+async function syncTx(id) {
+  try {
+    const t = await jget('/api/banking/transactions/' + id);
+    state.txs.set(id, t);
+    return t;
+  } catch { return state.txs.get(id); }
+}
+
+function renderDetail() {
+  const t = state.txs.get(state.active);
+  const card = $('detailcard');
+  if (!t) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  $('d-id').textContent = 'ID ' + t.id + ' · ' + new Date(t.created_at).toLocaleString();
+  $('d-amt').textContent = inr(t.amount);
+  const st = $('d-status');
+  st.textContent = t.status;
+  st.className = 'status ' + t.status;
+  $('d-ben').textContent = t.description || '—';
+  $('d-vauth').textContent = t.vauth.alert_level + ' · ' + Math.round(t.vauth.risk_score * 100) + '%';
+  $('d-req').textContent = t.required_actions.length ? t.required_actions.join(' · ') : 'none';
+  $('d-bal').textContent = t.balance_after != null ? inr(t.balance_after) : '—';
+  $('d-reason').textContent = t.reason;
+  $('d-ch').innerHTML = (t.verification || []).map((c) =>
+    '<div class="chip ' + (c.success ? 'ok' : 'no') + '">' + (c.success ? '✔' : '✘') + ' ' + c.method + ' — ' + (c.success ? 'verified' : 'FAILED') + ' (simulated)</div>'
+  ).join('');
+  const B = $('d-btns');
+  B.innerHTML = '';
+  const mk = (label, fn, cls, dis) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    if (cls) b.className = cls;
+    b.disabled = !!dis;
+    b.onclick = fn;
+    B.appendChild(b);
+  };
+  const pend = t.status === 'PENDING', held = t.status === 'PENDING_VERIFICATION';
+  mk('Approve', () => act('approve'), 'go', !pend);
+  mk('Verify: OTP', () => openOtp(t.id, 'otp'), '', !held);
+  mk('Verify: Callback', () => doVerify(t.id, 'callback', true), '', !held);
+  mk('Verify: Supervisor', () => doVerify(t.id, 'supervisor', true), '', !held);
+  mk('Block', () => act('block'), 'danger', !(pend || held));
+}
+
+async function act(kind) {
+  const id = state.active;
+  if (!id) return;
   try {
     let t;
-    if (a === 'approve') t = await jpost('/api/banking/transactions/' + txId + '/approve');
-    else if (a === 'block') t = await jpost('/api/banking/transactions/' + txId + '/block');
-    else if (a === 'otpfail') t = await jpost('/api/banking/transactions/' + txId + '/verify', { method: 'otp', success: false });
-    else t = await jpost('/api/banking/transactions/' + txId + '/verify', { method: a === 'otpfail' ? 'otp' : a, success: true });
-    render(t); refreshAccount(); refreshVauth();
-  } catch (e) { document.getElementById('txerr').textContent = e.message; }
+    if (kind === 'approve') t = await jpost('/api/banking/transactions/' + id + '/approve');
+    else if (kind === 'block') t = await jpost('/api/banking/transactions/' + id + '/block');
+    state.txs.set(id, t); renderQueue(); renderDetail(); refreshAccount();
+    audit(id + ' → <b>' + t.status + '</b>', t.status === 'APPROVED' ? 'good' : (t.status === 'BLOCKED' ? 'bad' : ''));
+  } catch (e) { toast(e.message, true); audit(id + ' action rejected: ' + e.message, 'bad'); }
 }
 
-$('create').onclick = async () => {
+async function doVerify(id, method, success) {
   try {
-    const t = await jpost('/api/banking/transactions', { amount: Number($('amount').value), sensitive_action: true });
-    txId = t.id; render(t); refreshAccount(); refreshVauth();
-  } catch (e) { $('tx').innerHTML = '<div class="err">' + e.message + '</div>'; }
-};
+    const t = await jpost('/api/banking/transactions/' + id + '/verify', { method, success });
+    state.txs.set(id, t); renderQueue(); renderDetail(); refreshAccount(); refreshVauth();
+    audit(id + ' ' + method + ' ' + (success ? 'ok' : 'FAIL') + ' → <b>' + t.status + '</b>', success ? 'good' : 'bad');
+    toast(id + ' → ' + t.status, t.status === 'BLOCKED');
+  } catch (e) { toast(e.message, true); }
+}
 
-document.getElementById('resetbank').onclick = async () => {
-  await jpost('/api/banking/reset'); txId = null; $('tx').innerHTML = '';
-  refreshAccount(); refreshVauth();
-};
+// ---------- OTP modal (simulated SMS with expiring code) ----------
+function openOtp(id, method) {
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const deadline = Date.now() + 120000;
+  state.otp = { id, method, code };
+  const root = $('modalroot');
+  root.innerHTML =
+    '<div class="overlay"><div class="modal">' +
+    '<h3>Secondary verification — OTP</h3>' +
+    '<p>Simulated challenge for <b class="mono">' + id + '</b>. In production this would be an SMS to the registered device. No real message is sent.</p>' +
+    '<div class="sms">📩 SMS from <b>VAUTH-BK</b>: your verification code is<br /><b>' + code + '</b><br />Valid 02:00 · never share it.</div>' +
+    '<div class="timer" id="otptimer">Expires in 02:00</div>' +
+    '<div class="otpinputs">' + '<input maxlength="1" inputmode="numeric" />'.repeat(6) + '</div>' +
+    '<div class="btnrow"><button id="otpgo" class="go">Verify code</button><button id="otpfill">Autofill (demo)</button><button id="otpfail">Simulate failure</button><button id="otpx">Cancel</button></div>' +
+    '</div></div>';
+  const inputs = [...root.querySelectorAll('.otpinputs input')];
+  inputs.forEach((inp, i) => {
+    inp.oninput = () => { inp.value = inp.value.replace(/\D/g, '').slice(0, 1); if (inp.value && i < 5) inputs[i + 1].focus(); };
+    inp.onkeydown = (e) => { if (e.key === 'Backspace' && !inp.value && i > 0) inputs[i - 1].focus(); };
+  });
+  inputs[0].focus();
+  const tick = setInterval(() => {
+    const left = Math.max(0, deadline - Date.now());
+    const s = Math.ceil(left / 1000);
+    const el = $('otptimer');
+    if (el) el.textContent = 'Expires in ' + String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    if (!left) clearInterval(tick);
+  }, 500);
+  const close = () => { clearInterval(tick); root.innerHTML = ''; state.otp = null; };
+  $('otpx').onclick = close;
+  root.querySelector('.overlay').onclick = (e) => { if (e.target.className === 'overlay') close(); };
+  $('otpfill').onclick = () => { code.split('').forEach((d, i) => inputs[i].value = d); };
+  $('otpfail').onclick = async () => { close(); await doVerify(id, method, false); };
+  $('otpgo').onclick = async () => {
+    const entered = inputs.map((x) => x.value).join('');
+    if (entered.length < 6) return toast('Enter all 6 digits.', true);
+    const ok = entered === code && Date.now() < deadline;
+    if (!ok && Date.now() >= deadline) toast('Code expired — a new one was “sent”.', true);
+    close();
+    await doVerify(id, method, ok);
+  };
+}
 
+// ---------- boot + poll ----------
+loadBen();
 refreshAccount(); refreshVauth();
-setInterval(() => { refreshAccount(); refreshVauth(); if (txId) jget('/api/banking/transactions/' + txId).then(render).catch(() => {}); }, 3000);
+audit('Bank simulator loaded. Create a transfer to begin.', 'good');
+setInterval(async () => {
+  refreshAccount(); refreshVauth();
+  if (state.active) { await syncTx(state.active); renderQueue(); renderDetail(); }
+}, 3000);
 </script>
 </body>
 </html>
