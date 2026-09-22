@@ -5,31 +5,321 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>VAuth Demo Bank — Simulated Environment</title>
 <style>
-  :root { color-scheme: light; }
-  body { margin: 0; background: #eef2f7; color: #0f172a; font-family: 'Segoe UI', system-ui, sans-serif; }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 20px; }
-  .sim { background: #7c2d12; color: #ffedd5; text-align: center; font-weight: 800; letter-spacing: 1px; padding: 10px; border-radius: 10px; margin-bottom: 14px; }
-  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
-  h1 { font-size: 22px; margin: 0 0 4px; }
-  .sub { color: #64748b; font-size: 13px; margin-bottom: 12px; }
-  .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #e2e8f0; font-size: 14px; }
-  .row b { font-variant-numeric: tabular-nums; }
-  .status { font-weight: 800; letter-spacing: 1px; padding: 6px 12px; border-radius: 999px; display: inline-block; font-size: 13px; }
-  .PENDING { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; }
-  .PENDING_VERIFICATION { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
-  .APPROVED { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
-  .BLOCKED, .FAILED { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
-  .lvl-RED { color: #dc2626; font-weight: 800; } .lvl-ORANGE { color: #c2410c; font-weight: 800; }
-  .lvl-YELLOW { color: #a16207; font-weight: 800; } .lvl-GREEN { color: #16a34a; font-weight: 800; }
-  .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  button { border: 1px solid #cbd5e1; background: #fff; border-radius: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer; font-size: 13px; }
-  button:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(15,23,42,.12); }
-  button:disabled { opacity: .45; cursor: default; }
-  button.primary { background: #0284c9; border-color: #0284c9; color: #fff; }
-  button.danger { background: #fef2f2; border-color: #fca5a5; color: #b91c1c; }
-  input, select { padding: 9px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
-  .log { font-size: 12px; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
-  .err { color: #b91c1c; font-size: 13px; margin-top: 8px; }
+:root {
+  color-scheme: light;
+  --neon-cyan: #0ea5e9;
+  --neon-purple: #8b5cf6;
+  --neon-pink: #ec4899;
+  --neon-green: #10b981;
+  --neon-red: #ef4444;
+  --neon-orange: #f97316;
+  --neon-yellow: #eab308;
+  --bg-base: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.7);
+  --border-glass: rgba(255, 255, 255, 0.5);
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --glow-cyan: 0 0 8px rgba(14, 165, 233, 0.2), 0 0 20px rgba(14, 165, 233, 0.08);
+  --glow-purple: 0 0 8px rgba(139, 92, 246, 0.2), 0 0 20px rgba(139, 92, 246, 0.08);
+  --glow-pink: 0 0 8px rgba(236, 72, 153, 0.2), 0 0 20px rgba(236, 72, 153, 0.08);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg-base);
+  background-image:
+    radial-gradient(ellipse 600px 600px at 10% 20%, rgba(14, 165, 233, 0.04), transparent),
+    radial-gradient(ellipse 500px 500px at 90% 30%, rgba(139, 92, 246, 0.04), transparent),
+    radial-gradient(ellipse 400px 400px at 50% 80%, rgba(236, 72, 153, 0.03), transparent);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+.wrap { max-width: 800px; margin: 0 auto; padding: 24px; }
+
+/* Banner */
+.sim {
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.12), rgba(139, 92, 246, 0.08));
+  color: var(--neon-cyan);
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 2px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(14, 165, 233, 0.15);
+  backdrop-filter: blur(10px);
+  font-size: 12px;
+}
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.02), transparent 60%);
+  pointer-events: none;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(14, 165, 233, 0.25);
+}
+
+h1 {
+  font-size: 22px;
+  margin: 0 0 4px;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sub {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+/* Rows */
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+  font-size: 14px;
+}
+
+.row:last-child { border-bottom: none; }
+
+.row b {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+/* Status badges */
+.status {
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 12px;
+}
+
+.status.PENDING {
+  background: rgba(14, 165, 233, 0.08);
+  color: var(--neon-cyan);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+}
+
+.status.PENDING_VERIFICATION {
+  background: rgba(249, 115, 22, 0.08);
+  color: var(--neon-orange);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+}
+
+.status.APPROVED {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--neon-green);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status.BLOCKED,
+.status.FAILED {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--neon-red);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* Alert levels */
+.lvl-RED { color: var(--neon-red); font-weight: 800; }
+.lvl-ORANGE { color: var(--neon-orange); font-weight: 800; }
+.lvl-YELLOW { color: var(--neon-yellow); font-weight: 800; }
+.lvl-GREEN { color: var(--neon-green); font-weight: 800; }
+
+/* Buttons */
+.btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+button {
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--neon-cyan);
+  box-shadow: var(--glow-cyan);
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+button:active:not(:disabled) { transform: translateY(0); }
+
+button:disabled { opacity: 0.35; cursor: default; }
+
+button.primary {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(139, 92, 246, 0.1));
+  border-color: rgba(14, 165, 233, 0.3);
+  color: var(--neon-cyan);
+}
+
+button.primary:hover:not(:disabled) {
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.2);
+  border-color: var(--neon-cyan);
+}
+
+button.danger {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: var(--neon-red);
+}
+
+button.danger:hover:not(:disabled) {
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+  border-color: var(--neon-red);
+}
+
+/* Inputs */
+input, select {
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--text-primary);
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--neon-cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+/* Log box */
+.log {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(14, 165, 233, 0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  backdrop-filter: blur(10px);
+  line-height: 1.6;
+}
+
+.err {
+  color: var(--neon-red);
+  font-size: 12px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid var(--neon-red);
+}
+
+/* Transfer form */
+.transfer-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.transfer-form label {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.transfer-form input {
+  width: 180px;
+}
+
+/* Section title */
+.section-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.section-title::after {
+  content: '';
+  display: block;
+  width: 25px;
+  height: 2px;
+  margin-top: 4px;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple), transparent);
+  border-radius: 1px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .wrap { padding: 16px; }
+  .transfer-form input { width: 100%; }
+  .btns .btn { flex: 1 1 auto; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.02); }
+::-webkit-scrollbar-thumb {
+  background: rgba(14, 165, 233, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(14, 165, 233, 0.4); }
+
+/* Pulse animation for live indicator */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--neon-green);
+  margin-right: 6px;
+  animation: pulse-soft 2s ease-in-out infinite;
+}
 </style>
 </head>
 <body>
@@ -46,17 +336,17 @@
   </div>
 
   <div class="card">
-    <h1 style="font-size:16px">Live VAuth decision</h1>
+    <div class="section-title">Live VAuth decision</div>
     <div class="row"><span>Risk</span><b id="v-risk">—</b></div>
     <div class="row"><span>Alert</span><b id="v-alert">—</b></div>
     <div class="row"><span>Protection</span><b id="v-prot">—</b></div>
-    <div class="sub" id="v-note">Polling the VAuth backend every 3 s.</div>
+    <div class="sub" id="v-note"><span class="live-dot"></span>Polling the VAuth backend every 3 s.</div>
   </div>
 
   <div class="card">
-    <h1 style="font-size:16px">Transfer request</h1>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <label>Amount (₹) <input id="amount" type="number" value="500000" min="1" step="1000" style="width:160px"></label>
+    <div class="section-title">Transfer request</div>
+    <div class="transfer-form">
+      <label>Amount (₹) <input id="amount" type="number" value="500000" min="1" step="1000"></label>
       <button class="primary" id="create">Create transfer</button>
     </div>
     <div id="tx"></div>
@@ -94,9 +384,9 @@ function render(tx) {
   $('tx').innerHTML =
     '<div class="row"><span>ID</span><b>' + tx.id + '</b></div>' +
     '<div class="row"><span>Amount</span><b>' + inr(tx.amount) + '</b></div>' +
-    '<div class="row"><span>VAuth risk</span><b>' + Math.round(v.risk_score * 100) + '% · <span class="lvl-' + v.alert_level + '">' + v.alert_level + '</span></b></div>' +
+    '<div class="row"><span>VAuth risk</span><b>' + Math.round(v.risk_score * 100) + '% &middot; <span class="lvl-' + v.alert_level + '">' + v.alert_level + '</span></b></div>' +
     '<div class="row"><span>Status</span><span class="status ' + tx.status + '">' + tx.status + '</span></div>' +
-    '<div class="log">' + tx.reason + (tx.required_actions.length ? '<br>Required: ' + tx.required_actions.join(' · ') : '') +
+    '<div class="log">' + tx.reason + (tx.required_actions.length ? '<br>Required: ' + tx.required_actions.join(' &middot; ') : '') +
     (tx.verification.length ? '<br>Challenges: ' + tx.verification.map(c => c.method + '=' + (c.success ? 'ok' : 'FAIL') + ' (simulated)').join(', ') : '') + '</div>' +
     '<div class="err" id="txerr"></div>' +
     '<div class="btns">' +
