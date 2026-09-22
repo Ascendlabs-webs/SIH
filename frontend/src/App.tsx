@@ -6,9 +6,12 @@ import { RiskGauge } from './components/RiskGauge';
 import { RiskTimeline } from './components/RiskTimeline';
 import { Assistant } from './components/Assistant';
 import { EventTimeline, SignalAnalysis, TechMetrics } from './components/Panels';
+import { AnimatedCounter } from './components/AnimatedCounter';
 import { EmptyState } from './components/EmptyState';
 import { Skeleton } from './components/Skeleton';
 import ParticleBackground from './components/ParticleBackground';
+import { Waveform } from './components/Waveform';
+import { useConfetti } from './components/Confetti';
 import { useToast } from './components/Toast';
 import { useTheme } from './components/Theme';
 import { levelColor } from './components/helpers';
@@ -25,6 +28,8 @@ const DEFAULT_CTX: CallContext = {
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
+  const { showToast } = useToast();
+  const { burst, setCanvas } = useConfetti();
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [ctx, setCtx] = useState<CallContext>(DEFAULT_CTX);
   const [mode, setMode] = useState<'DEMO' | 'LIVE'>('DEMO');
@@ -34,9 +39,11 @@ export default function App() {
   const [model, setModel] = useState<ModelStatus | null>(null);
   const [vonage, setVonage] = useState<VonageStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showSummary, setShowSummary] = useState(false);
+  const [expandedMetric, setExpandedMetric] = useState<string | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const abortRef = useRef<AbortController | null>(null);
-  const { showToast } = useToast();
+  const riskRef = useRef<HTMLDivElement>(null);
 
   const cancelInflight = () => {
     timers.current.forEach(clearTimeout);
@@ -98,6 +105,14 @@ export default function App() {
       showToast('⚠ HIGH RISK: Synthetic voice detected!', 'error');
     }
   }, [last, showToast]);
+
+  // Confetti on verification
+  useEffect(() => {
+    if (prot?.state === 'VERIFIED' && riskRef.current) {
+      const rect = riskRef.current.getBoundingClientRect();
+      burst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
+  }, [prot?.state, burst]);
 
   const playDemo = async (scenario: 'real' | 'synthetic' | 'real_speech') => {
     cancelInflight();
@@ -257,7 +272,6 @@ export default function App() {
     timers.current.push(tickRec);
   };
 
-  // Chart export function
   const exportChart = () => {
     const svg = document.querySelector('.chart-box svg');
     if (!svg) {
@@ -279,6 +293,8 @@ export default function App() {
   const protState = prot?.state ?? last?.protection_state ?? 'NORMAL';
   const verified = protState === 'VERIFIED';
   const blocked = protState === 'SECONDARY_VERIFICATION_REQUIRED' || protState === 'BLOCKED';
+
+  const riskGlow = level === 'RED' ? '0 0 30px rgba(239, 68, 68, 0.3)' : level === 'ORANGE' ? '0 0 20px rgba(249, 115, 22, 0.2)' : 'none';
 
   if (loading) {
     return (
@@ -312,6 +328,7 @@ export default function App() {
 
   return (
     <div className="shell">
+      <canvas ref={setCanvas} className="confetti-canvas" />
       <ParticleBackground />
       <div className="scanlines" />
       <header className="topbar">
@@ -327,7 +344,7 @@ export default function App() {
             MODEL: {model?.model_name ?? '…'} · MODE: {model?.mode_label ?? '…'}
           </span>
           <span className={`conn ${connected ? 'on' : 'off'}`}>● {connected ? 'Connected' : 'Reconnecting…'}</span>
-          <span className="mode">{mic.active ? 'LIVE' : mode}</span>
+          <span className={`mode ${mic.active ? 'live-pulse' : ''}`}>{mic.active ? '● LIVE' : mode}</span>
           <button className="theme-toggle" onClick={toggleTheme} title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
             {theme === 'light' ? '🌙' : '☀️'}
           </button>
@@ -335,24 +352,53 @@ export default function App() {
         </div>
       </header>
 
+      {/* Sticky risk summary bar */}
+      <div className={`risk-summary-bar ${showSummary || results.length === 0 ? '' : 'compact'}`} style={{ boxShadow: riskGlow }}>
+        <div className="risk-summary-inner">
+          <div className="risk-summary-gauge">
+            <svg viewBox="0 0 60 30" className="mini-gauge">
+              <path d="M 5 25 A 25 25 0 0 1 55 25" fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="4" strokeLinecap="round" />
+              <path
+                d="M 5 25 A 25 25 0 0 1 55 25"
+                fill="none"
+                stroke={color}
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeDasharray={`${risk * 78.5} 78.5`}
+                style={{ filter: `drop-shadow(0 0 4px ${color})` }}
+              />
+            </svg>
+            <span className="risk-summary-value" style={{ color }}><AnimatedCounter value={risk} /></span>
+          </div>
+          <span className="risk-summary-level" style={{ color, borderColor: `${color}44` }}>{level}</span>
+          <span className="risk-summary-class">{last?.classification ?? 'REAL'}</span>
+          <button className="risk-summary-toggle" onClick={() => setShowSummary(!showSummary)}>
+            {showSummary ? '▼' : '▲'}
+          </button>
+        </div>
+      </div>
+
       {model?.warning && (
         <div className="warn-banner">⚠ {model.warning}</div>
       )}
 
       <main className="grid">
-        <section className="card span-main">
+        <section className={`card span-main alert-${level.toLowerCase()}`} ref={riskRef} style={{ boxShadow: riskGlow !== 'none' ? riskGlow : undefined }}>
           <div className="card-title">Current Risk</div>
           <RiskGauge risk={risk} level={level} classification={last?.classification ?? 'REAL'} />
           <div className="kv">
-            <div><span>Alert</span><strong style={{ color }}>{level}</strong></div>
-            <div><span>Classification</span><strong>{last?.classification ?? '—'}</strong></div>
-            <div><span>Confidence</span><strong>{last ? `${Math.round(last.confidence * 100)}%` : '—'}</strong></div>
+            <div className="kv-animate"><span>Alert</span><strong style={{ color, transition: 'color 0.4s ease' }}>{level}</strong></div>
+            <div className="kv-animate"><span>Classification</span><strong>{last?.classification ?? '—'}</strong></div>
+            <div className="kv-animate"><span>Confidence</span><strong>{last ? <AnimatedCounter value={last.confidence} /> : '—'}</strong></div>
+          </div>
+          <div className="waveform-container">
+            <Waveform active={mic.active} color={color} />
           </div>
           <div className="controls">
             <button disabled={busy} onClick={() => void playDemo('synthetic')} className="btn synth ripple">{busy ? '⏳ Analyzing…' : '▶ Start Synthetic Voice Demo'}</button>
             <button disabled={busy} onClick={() => void playDemo('real_speech')} className="btn genuine ripple">{busy ? '⏳ Analyzing…' : '▶ Start Real Speech Demo'}</button>
-            <button onClick={() => void toggleMic()} className="btn ghost ripple">{mic.active && !twilioLive ? '■ Stop Microphone' : '◉ Use Microphone (Live)'}</button>
-            <button onClick={() => void toggleTwilioLive()} className="btn ghost ripple">{twilioLive ? '■ End Simulated Call' : '◉ Simulate Live Call'}</button>
+            <button onClick={() => void toggleMic()} className={`btn ghost ripple ${mic.active ? 'active-btn' : ''}`}>{mic.active && !twilioLive ? '■ Stop Microphone' : '◉ Use Microphone (Live)'}</button>
+            <button onClick={() => void toggleTwilioLive()} className={`btn ghost ripple ${twilioLive ? 'active-btn' : ''}`}>{twilioLive ? '■ End Simulated Call' : '◉ Simulate Live Call'}</button>
             <button onClick={() => void toggleRecord()} className={`btn ghost ripple ${recording ? 'recording-pulse' : ''}`}>{recording ? `■ Stop & save (${recSecs}s)` : '● Record my voice'}</button>
             <label className="btn ghost file ripple">
               ⤒ Upload WAV
@@ -365,7 +411,7 @@ export default function App() {
           )}
         </section>
 
-        <section className="card">
+        <section className={`card alert-${level.toLowerCase()}`}>
           <div className="card-title">Security Recommendation</div>
           {last ? (
             <>
@@ -400,7 +446,7 @@ export default function App() {
           )}
         </section>
 
-        <section className="card span-wide">
+        <section className={`card span-wide alert-${level.toLowerCase()}`}>
           <div className="card-title">
             Risk Timeline <span className="hint">thresholds 0.60 / 0.75 / 0.90</span>
           </div>
@@ -413,27 +459,27 @@ export default function App() {
             />
           ) : (
             <>
-              <button className="btn ghost export-btn" onClick={exportChart}>⬇ Export SVG</button>
+              <button className="btn ghost export-btn ripple" onClick={exportChart}>⬇ Export SVG</button>
               <RiskTimeline data={results} />
             </>
           )}
         </section>
 
-        <section className="card">
+        <section className={`card alert-${level.toLowerCase()}`}>
           <div className="card-title">Technical Metrics</div>
           {last ? <TechMetrics last={last} /> : (
             <EmptyState icon="📈" title="No metrics" message="Analysis results will appear here" />
           )}
         </section>
 
-        <section className="card">
+        <section className={`card alert-${level.toLowerCase()}`}>
           <div className="card-title">Signal Analysis</div>
           {last ? <SignalAnalysis last={last} /> : (
             <EmptyState icon="🎵" title="No signal data" message="Upload audio or run a demo to see features" />
           )}
         </section>
 
-        <section className="card">
+        <section className={`card alert-${level.toLowerCase()}`}>
           <div className="card-title">Call Information</div>
           <div className="callinfo">
             <label>Call type
@@ -458,7 +504,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="card">
+        <section className={`card alert-${level.toLowerCase()}`}>
           <div className="card-title">Event Timeline</div>
           {results.length === 0 ? (
             <EmptyState icon="📋" title="No events" message="Analysis events will appear here in real-time" />
