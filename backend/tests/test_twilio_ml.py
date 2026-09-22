@@ -95,7 +95,8 @@ def test_ml_mode_loads_real_detector():
     import app.models.factory as factory
     from app.models.ml_detector import MLVoiceDetector
 
-    if not Path("models/AASIST.pth").is_file():
+    ROOT = Path(__file__).resolve().parents[2]
+    if not (ROOT / "models/AASIST.pth").is_file():
         pytest.skip("AASIST checkpoint unavailable; run scripts/download_aasist.py")
     det = factory.get_detector("ml")
     assert isinstance(det, MLVoiceDetector)

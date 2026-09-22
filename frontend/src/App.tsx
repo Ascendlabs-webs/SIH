@@ -3,6 +3,7 @@ import { analyzeFile, bankUrl, fetchStatus, getModelStatus, getProtection, getVo
 import { useVAuthWS } from './hooks/useVAuth';
 import { useMic } from './hooks/useMic';
 import { RiskGauge } from './components/RiskGauge';
+import { ChartIcon, ClockIcon, CodeIcon, DbIcon, ShieldIcon, UploadIcon, WaveIcon } from './components/icons';
 import { RiskTimeline } from './components/RiskTimeline';
 import { EventTimeline, TechMetrics } from './components/Panels';
 import { Assistant } from './components/Assistant';
@@ -360,7 +361,7 @@ export default function App() {
         <div className="side-logo">
           <img src="/logo.svg" alt="VAuth logo" />
           <div>
-            <div className="vname">VAuth <span className="vwave">◁•▮•▷</span></div>
+            <div className="vname">VAuth</div>
             <div className="vtag">Real Voices. Real Trust.</div>
           </div>
         </div>
@@ -446,19 +447,19 @@ export default function App() {
             </div>
             <section className="stats">
               <div className="stat">
-                <span className="stat-ic blue">◁•▮•▷</span>
+                <span className="stat-ic blue"><WaveIcon /></span>
                 <div><small>Total Detections</small><strong>{statsLoading ? <span className="skel">000</span> : totalDetections}</strong><span className="delta up">↑ 12% <em>vs. last session</em></span></div>
               </div>
               <div className="stat">
-                <span className="stat-ic green">🛡</span>
+                <span className="stat-ic green"><ShieldIcon /></span>
                 <div><small>Threats Flagged</small><strong>{statsLoading ? <span className="skel">00</span> : threats}</strong><span className="delta up">↑ 25% <em>vs. last session</em></span></div>
               </div>
               <div className="stat">
-                <span className="stat-ic purple">◷</span>
-                <div><small>Avg. Processing Time</small><strong>{statsLoading ? <span className="skel">000 ms</span> : `${avgMs} ms`}</strong><span className="delta down">↓ 32% <em>vs. last session</em></span></div>
+                <span className="stat-ic purple"><ClockIcon /></span>
+                <div><small>Avg. Processing Time</small><strong>{statsLoading ? <span className="skel">000 ms</span> : `${avgMs} ms`}</strong><strong>{statsLoading ? <span className="skel">000 ms</span> : `${avgMs} ms`}</strong><span className="delta down">↓ 32% <em>vs. last session</em></span></div>
               </div>
               <div className="stat">
-                <span className="stat-ic blue">▤</span>
+                <span className="stat-ic blue"><DbIcon /></span>
                 <div><small>Model Status</small><strong className="online">Online</strong><span className="delta"><em>All systems operational</em></span></div>
               </div>
             </section>
@@ -483,7 +484,7 @@ export default function App() {
                 <div className="card-head sm"><span className="zap">⚡</span><div><strong>Quick Actions</strong><small>Common tasks</small></div></div>
                 <div className="qa">
                   <button className="qa-btn green" disabled={busy} onClick={() => void playDemo('real_speech')}>🎙 Start Real-time Demo</button>
-                  <button className="qa-btn purple" disabled={busy} onClick={() => void playDemo('synthetic')}>◁•▮•▷ Try Synthetic Voice</button>
+                  <button className="qa-btn purple" disabled={busy} onClick={() => void playDemo('synthetic')}>▶ Try Synthetic Voice</button>
                   <button className="qa-btn blue" onClick={() => setPage('upload')}>⤒ Upload Audio File</button>
                   <button className="qa-btn blue" onClick={() => { setPage('monitor'); void toggleTwilioLive(); }}>{twilioLive ? '■ End Simulated Call' : '☎ Simulate Call'}</button>
                 </div>
@@ -553,7 +554,7 @@ export default function App() {
             <div className="page-head"><h1>Audio Upload</h1><p>Analyse a WAV file as an independent sample — no rolling-history dilution.</p></div>
             <section className="row2">
               <div className="card">
-                <div className="card-head sm"><span className="stat-ic blue sm">⤒</span><div><strong>Upload Audio</strong><small>WAV · held in memory only, never stored</small></div></div>
+                <div className="card-head sm"><span className="stat-ic blue sm"><UploadIcon size={16} /></span><div><strong>Upload Audio</strong><small>WAV · held in memory only, never stored</small></div></div>
                 <div
                   className={`dropzone ${dragOver ? 'over' : ''}`}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -626,20 +627,20 @@ export default function App() {
           <>
             <div className="page-head"><h1>Analytics</h1><p>Signal parameters, risk history and detection events.</p></div>
             <section className="stats">
-              <div className="stat"><span className="stat-ic blue">◁•▮•▷</span><div><small>Windows Analysed</small><strong>{results.length}</strong></div></div>
-              <div className="stat"><span className="stat-ic green">🛡</span><div><small>Threats Flagged</small><strong>{threats}</strong></div></div>
-              <div className="stat"><span className="stat-ic purple">◷</span><div><small>Avg. Latency</small><strong>{avgMs} ms</strong></div></div>
-              <div className="stat"><span className="stat-ic blue">▅</span><div><small>Peak Risk</small><strong>{Math.round(maxRisk * 100)}%</strong></div></div>
+              <div className="stat"><span className="stat-ic blue"><WaveIcon /></span><div><small>Windows Analysed</small><strong>{results.length}</strong></div></div>
+              <div className="stat"><span className="stat-ic green"><ShieldIcon /></span><div><small>Threats Flagged</small><strong>{threats}</strong></div></div>
+              <div className="stat"><span className="stat-ic purple"><ClockIcon /></span><div><small>Avg. Latency</small><strong>{avgMs} ms</strong></div></div>
+              <div className="stat"><span className="stat-ic blue"><ChartIcon /></span><div><small>Peak Risk</small><strong>{Math.round(maxRisk * 100)}%</strong></div></div>
             </section>
             <section className="row1">
               <div className="card">
-                <div className="card-head sm"><span className="stat-ic purple sm">▅</span><div><strong>Risk Timeline</strong><small>thresholds 0.60 / 0.75 / 0.90</small></div></div>
+                <div className="card-head sm"><span className="stat-ic purple sm"><ChartIcon size={16} /></span><div><strong>Risk Timeline</strong><small>thresholds 0.60 / 0.75 / 0.90</small></div></div>
                 <RiskTimeline data={results} />
               </div>
             </section>
             <section className="row2" id="tech">
               <div className="card">
-                <div className="card-head sm"><span className="stat-ic purple sm">▅</span><div><strong>Technical Metrics</strong><small>Real-time analysis parameters</small></div><span className="pill-stable">● Stable</span></div>
+                <div className="card-head sm"><span className="stat-ic purple sm"><ChartIcon size={16} /></span><div><strong>Technical Metrics</strong><small>Real-time analysis parameters</small></div><span className="pill-stable">● Stable</span></div>
                 <TechMetrics last={last} />
               </div>
               <div className="card">
@@ -656,7 +657,7 @@ export default function App() {
             <div className="page-head"><h1>Model &amp; Settings</h1><p>Which detector is really running, pipeline config and call context.</p></div>
             <section className="row2">
               <div className="card">
-                <div className="card-head sm"><span className="stat-ic blue sm">▤</span><div><strong>Active Model</strong><small>Never presented as ML when it is DEMO</small></div><span className="modepill">Mode: {model?.mode_label ?? 'DEMO'}</span></div>
+                <div className="card-head sm"><span className="stat-ic blue sm"><DbIcon size={16} /></span><div><strong>Active Model</strong><small>Never presented as ML when it is DEMO</small></div><span className="modepill">Mode: {model?.mode_label ?? 'DEMO'}</span></div>
                 <div className="call-rows">
                   <div><span>Model</span><b className="mono">{model?.model_name ?? '…'}</b></div>
                   <div><span>Detector mode</span><b className="mono">{model?.detector_mode ?? status?.detector ?? 'demo'}</b></div>
@@ -709,7 +710,7 @@ export default function App() {
             <div className="page-head"><h1>Demo Bank</h1><p>VAuth decides, the bank enforces. Simulated ledger — no real money.</p></div>
             <section className="row1">
               <div className="card">
-                <div className="card-head sm"><span className="stat-ic blue sm">▤</span><div><strong>Simulated Banking</strong><small>Rahul Sharma · VAUTH-10001 · ₹12,50,000</small></div><a className="viewall" href={bankUrl()} target="_blank" rel="noreferrer">Open full page ↗</a></div>
+                <div className="card-head sm"><span className="stat-ic blue sm"><DbIcon size={16} /></span><div><strong>Simulated Banking</strong><small>Rahul Sharma · VAUTH-10001 · ₹12,50,000</small></div><a className="viewall" href={bankUrl()} target="_blank" rel="noreferrer">Open full page ↗</a></div>
                 <p className="muted">Demo flow: run a voice demo on the <b>Live Detection</b> page to set live risk → create the ₹5,00,000 transfer below → verify via simulated OTP / callback / supervisor.</p>
                 <iframe className="bank-frame" src="/bank" title="VAuth Demo Bank" />
               </div>
@@ -723,7 +724,7 @@ export default function App() {
             <div className="page-head"><h1>API &amp; SDK</h1><p>REST + WebSocket contract for the VAuth backend.</p></div>
             <section className="row2">
               <div className="card">
-                <div className="card-head sm"><span className="stat-ic blue sm">﹤/﹥</span><div><strong>Endpoints</strong><small>Backend: {BACKEND}</small></div></div>
+                <div className="card-head sm"><span className="stat-ic blue sm"><CodeIcon size={16} /></span><div><strong>Endpoints</strong><small>Backend: {BACKEND}</small></div></div>
                 <div className="api-table">
                   {API_ROWS.map(([m, p, d]) => (
                     <div className="api-row" key={p}><span className="api-m">{m}</span><span className="mono">{p}</span><span className="api-d">{d}</span></div>
@@ -736,7 +737,7 @@ export default function App() {
                 </div>
               </div>
               <div className="card">
-                <div className="card-head sm"><span className="stat-ic purple sm">◁•▮•▷</span><div><strong>Streaming &amp; SDK</strong><small>Mic / WebRTC / Twilio / Vonage</small></div></div>
+                <div className="card-head sm"><span className="stat-ic purple sm"><WaveIcon size={16} /></span><div><strong>Streaming &amp; SDK</strong><small>Mic / WebRTC / Twilio / Vonage</small></div></div>
                 <p className="muted">WebSocket <span className="mono">/ws/audio</span>: send <span className="mono">{'{"type":"config",…}'}</span>, then binary PCM16/float32 frames or base64 JSON; receive <span className="mono">analysis_result</span> per 2.5 s window. Twilio streams hit <span className="mono">/ws/twilio</span> as μ-law media events.</p>
                 <pre className="code">{`# analyse a file\ncurl -X POST ${BACKEND}/api/analyze-file \\\n  -F "file=@call.wav" \\\n  "http://localhost:8000/api/analyze-file?call_type=upload"`}</pre>
                 <pre className="code">{`// browser mic -> VAuth (see hooks/useMic.ts)\nws.send(JSON.stringify({ type: 'config',\n  sample_rate: 16000, encoding: 'pcm16', context }));\nws.send(pcm16Buffer); // per frame`}</pre>

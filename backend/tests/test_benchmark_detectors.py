@@ -1,14 +1,16 @@
 """Benchmark detector registry tests (heavy ONNX loads kept to a minimum)."""
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
+ROOT = Path(__file__).resolve().parents[2]
+
 
 def _onnx_present(name: str) -> bool:
-    from pathlib import Path
-
-    return Path(f"models/{name}.onnx").is_file()
+    return (ROOT / f"models/{name}.onnx").is_file()
 
 
 requires_model = pytest.mark.requires_model
@@ -60,13 +62,11 @@ def test_unknown_detector_falls_back_with_warning():
 
 @requires_model
 def test_aasist_detector_matches_ml():
-    from pathlib import Path
-
     from app.models.ml_detector import MLVoiceDetector
     from app.models.onnx_detector import AASISTDetector
     from tests.conftest import make_tone
 
-    if not Path("models/AASIST.pth").is_file():
+    if not (ROOT / "models/AASIST.pth").is_file():
         pytest.skip("AASIST checkpoint unavailable; run scripts/download_aasist.py")
 
     audio = make_tone(flat=False, seconds=2.5)
@@ -78,8 +78,6 @@ def test_aasist_detector_matches_ml():
 
 @requires_model
 def test_spectra_smoke_inference():
-    from pathlib import Path
-
     from app.models.onnx_detector import SpectraAASISTDetector
     from tests.conftest import make_tone
 
@@ -93,12 +91,10 @@ def test_spectra_smoke_inference():
 
 @requires_model
 def test_pipeline_selects_spectra3():
-    from pathlib import Path
-
     from app.services.pipeline import AnalysisPipeline
     from tests.conftest import make_tone
 
-    if not Path("models/spectra-aasist3.onnx").is_file():
+    if not (ROOT / "models/spectra-aasist3.onnx").is_file():
         pytest.skip("spectra-aasist3.onnx unavailable")
     pipe = AnalysisPipeline(detector_name="spectra3")
     assert pipe.detector.name == "spectra3"

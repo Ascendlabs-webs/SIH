@@ -78,7 +78,6 @@ body {
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
 }
 .vname { font-weight: 800; font-size: 17px; }
-.vwave { font-size: 10px; color: var(--blue); font-weight: 400; }
 .vtag { font-size: 10px; color: var(--muted); }
 .nav { display: flex; flex-direction: column; gap: 2px; }
 .nav button {
@@ -176,6 +175,8 @@ body {
 .stat { background: var(--card); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; gap: 12px; align-items: flex-start; box-shadow: var(--shadow); transition: transform 0.2s ease; }
 .stat:hover { transform: translateY(-2px); }
 .stat-ic { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+.stat-ic svg { width: 20px; height: 20px; }
+.stat-ic.sm svg { width: 15px; height: 15px; }
 .stat-ic.blue { background: var(--blue-soft); color: var(--blue); }
 .stat-ic.green { background: var(--green-soft); color: var(--green); }
 .stat-ic.purple { background: var(--purple-soft); color: var(--purple); }
