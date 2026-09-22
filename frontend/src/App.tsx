@@ -10,6 +10,7 @@ import { EmptyState } from './components/EmptyState';
 import { Skeleton } from './components/Skeleton';
 import ParticleBackground from './components/ParticleBackground';
 import { useToast } from './components/Toast';
+import { useTheme } from './components/Theme';
 import { levelColor } from './components/helpers';
 import type { AnalysisResult, CallContext, ModelStatus, ProtectionSnapshot, StatusResponse } from './types';
 import type { VonageStatus } from './services/api';
@@ -23,6 +24,7 @@ const DEFAULT_CTX: CallContext = {
 };
 
 export default function App() {
+  const { theme, toggleTheme } = useTheme();
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [ctx, setCtx] = useState<CallContext>(DEFAULT_CTX);
   const [mode, setMode] = useState<'DEMO' | 'LIVE'>('DEMO');
@@ -326,6 +328,9 @@ export default function App() {
           </span>
           <span className={`conn ${connected ? 'on' : 'off'}`}>● {connected ? 'Connected' : 'Reconnecting…'}</span>
           <span className="mode">{mic.active ? 'LIVE' : mode}</span>
+          <button className="theme-toggle" onClick={toggleTheme} title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
           <a className="mode bank-link" href={bankUrl()} target="_blank" rel="noreferrer" title="Open the simulated banking demo (separate page)">Demo Bank ↗</a>
         </div>
       </header>
